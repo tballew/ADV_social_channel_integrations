@@ -1,0 +1,78 @@
+<section role="dialog" tabindex="-1" aria-modal="true" aria-labelledby="modal-heading-01" class="slds-modal"
+    id="productPickerModal">
+    <div class="slds-modal__container">
+        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse">
+            <svg class="slds-button__icon slds-button__icon_large" aria-hidden="true">
+                <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#close')}"></use>
+            </svg>
+            <span class="slds-assistive-text">Cancel and close</span>
+        </button>
+        <div class="slds-modal__header">
+            <h1 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Product Picker</h1>
+        </div>
+        <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+            <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped"
+                aria-label="Example table of Opportunities with striped rows">
+                <thead>
+                    <tr class="slds-line-height_reset">
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="ID">ID</div>
+                        </th>
+                        <th class="" scope="col">
+                            <div class="slds-truncate" title="Name">Name</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+        <div class="slds-modal__footer">
+            <ul class="slds-button-group-row slds-col slds-size_1-of-1 slds-align_absolute-center">
+                <li class="slds-button-group-item">
+                    <button class="slds-button slds-button--first slds-button_neutral" title="First">
+                        <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#arrow_left')}"></use>
+                        </svg>
+                    </button>
+                </li>
+                <li class="slds-button-group-item">
+                    <button class="slds-button slds-button--prev slds-button_neutral" title="Previous">
+                        <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#back')}"></use>
+                        </svg>
+                    </button>
+                </li>
+
+                <li class="slds-button-group-item">
+                    <button class="slds-button slds-button--next slds-button_neutral" title="Next">
+                        <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#forward')}"></use>
+                        </svg>
+                    </button>
+                </li>
+                <li class="slds-button-group-item">
+                    <button class="slds-button slds-button--last slds-button_neutral" title="Last">
+                        <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#arrow_right')}"></use>
+                        </svg>
+                    </button>
+                </li>
+            </ul>
+            <div class="slds-col slds-col--modal-footer slds-size_1-of-1 slds-align_absolute-center">
+                <span>Go to page</span>
+                <input type="text" id="pages-input" placeholder="1" class="slds-input" style="width: 60px;" />
+                <span class="totals">of 100</span>
+                <button class="slds-button slds-button_neutral slds-button--goto" title="Go to page">
+                    <svg class="slds-icon slds-icon_small slds-icon-text-success" aria-hidden="true">
+                        <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#right')}"></use>
+                    </svg>
+                </button>
+            </div>
+            <div class="slds-col slds-size_1-of-1 slds-align_absolute-center">
+                <span class="slds-badge slds-badge_inverse slds-float_right">Displaing 1 -10 of 100 </span>
+            </div>
+        </div>
+    </div>
+</section>
+<div class="slds-backdrop slds-backdrop--productPickerModal" role="presentation"></div>

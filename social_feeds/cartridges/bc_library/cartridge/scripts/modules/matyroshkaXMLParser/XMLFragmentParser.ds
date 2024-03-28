@@ -1,0 +1,386 @@
+
+var Logger = require('dw/system').Logger.getLogger('matryoshka');
+
+require('dw/io');
+
+var ArrayList = require('dw/util').ArrayList;
+var Class = require('bc_library/cartridge/scripts/object-handling/libInheritance.ds').Class;
+var Collections = require('bc_library/cartridge/scripts/util/Collections.ds').Collections;
+var XMLParseError = require('bc_library/cartridge/scripts/xml/matyroshka/XMLParseError.ds').XMLParseError;
+
+/**
+* @class XMLFragmentParser
+*
+* Parser which cares for the information extraction of a defined part of the XML document. A XML Fragment Parser
+* has to be attached to a Document and can have n* Child XML Fragment Parser. Each XML Fragment Parser has to be
+* derived from this base class. A basic implementation could look like this:
+*/
+var XMLFragmentParser = Class.extend({
+
+    /**
+    	* constructor method called when creating instances of XMLFragmentParser
+    	*
+    	* @constructs
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	*/
+    init : function() {
+
+        /**
+        		  @typedef DocumentParseEventHandler
+        		  @type {object}
+        		  @property {number} event - the event to register for
+        		  @property {Object} context - the object to set the this reference to
+        		  @property {ParseEventHandler} handler - the Parse event handler to be called
+        		  @property {boolean} active - if the Parse Event Handler is initially active
+        		*/
+
+        /*
+        		* @member {ArrayList.<DocumentParseEventHandler>}
+        		*/
+        this.parseEventHandlers = new ArrayList();
+
+        /**
+        		  @typedef EventListener
+        		  @type {object}
+        		  @property {String} event - the event to register for
+        		  @property {Function} handler - the Parse event handler to be called
+        		  @property {Object} context - the object to set the this reference to
+        		*/
+
+        /* ArrayList<{ event : String, handler : Function, context: Object }>
+        		*
+        		* @member {ArrayList.<EventListener>}
+        		*/
+        this.eventListener = new ArrayList();
+
+        /*
+        		* @member {ArrayList.<XMLFragmentParser>}
+        		*/
+        this.childParsers = new ArrayList();
+
+        /**
+        		* @member {Document}
+        		*/
+        this.document = null;
+
+        /**
+        		* @member {XMLFragmentParser}
+        		*/
+        this.parentParser = null;
+
+    },
+
+    /**
+    	* Registers a child parser to this parser. A child parser must be activated and deactivated by the parent parser.
+    	*
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {XMLFragmentParser} parser Child parser to attach to this parser.
+    	*/
+    registerChildFragmentParser : function(parser) {
+        if (this._isValidParser(parser)) {
+            parser.parentParser = this;
+            this.childParsers.add(parser);
+
+            if (!empty(this.document) && empty(parser.document)) {
+                parser.document = this.document;
+                parser.addedToDocument();
+                this.document.addEventHandlers(parser);
+                parser.recursivelySetDocument(this.document);
+            }
+
+        } else {
+            throw new XMLParseError('Trying to register invalid XML fragment parser');
+        }
+
+        return this;
+    },
+
+    /**
+    	* Callback function called once the XMLFragmentParser was added to the document which is to be parsed.
+    	* Parse Event Handlers and Event Listeners should be registered within this callback function
+    	*
+    	* @abstract
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*/
+    addedToDocument : function() {
+        Collections.each(this.eventListener, function(eventListener) {
+            this.document.messageQueue.on(eventListener.event, eventListener.handler, eventListener.context);
+        }, this);
+    },
+
+    /**
+    	* Unregisters a child XMLFragmentParser from this Fragment parser
+    	*
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {XMLFragmentParser} parser Child parser to remove from this fragment parser
+    	*
+    	* @returns {XMLFragmentParser} current instance
+    	*/
+    unregisterChildFragmentParser : function(parser) {
+        this.childParsers.remove(parser);
+
+        return this;
+    },
+
+    /**
+     * Callback method used internally and called by parent XMLFragmentParser and Document
+     * No need to call this method in custom fragment parser code.
+     *
+ 	* @public
+ 	* @memberof XMLFragmentParser
+ 	* @instance
+ 	*
+ 	*/
+    parserActivated : function() {
+        Logger.info('Parser activated');
+        Collections.each(this.parseEventHandlers, function(parseEventHandler) {
+            Logger.info('Activated parser event handler: ' + parseEventHandler.name);
+            parseEventHandler.active = true;
+        });
+    },
+
+    /**
+     * Callback method used internally and called by parent XMLFragmentParser and Document
+     * No need to call this method in custom fragment parser code.
+     *
+ 	* @public
+ 	* @memberof XMLFragmentParser
+ 	* @instance
+ 	*
+ 	*/
+    parserDeactivated : function() {
+        Logger.info('Parser deactivated');
+
+        Collections.each(this.parseEventHandlers, function(parseEventHandler) {
+            Logger.info('Deactivated parser event handler: ' + parseEventHandler.name);
+            parseEventHandler.active = false;
+        });
+    },
+
+    /**
+ 	* Implementation of a private member state reset
+ 	*
+ 	*
+ 	* @abstract
+ 	* @private
+ 	* @memberof XMLFragmentParser
+ 	* @instance
+ 	*/
+    _resetState : function() {
+        throw new XMLParseError('_resetState method is not implemented by XML fragment parser');
+    },
+
+    /**
+        * Method called by XML Parse Event Listeners to activate child parsers. This method is normally called
+        * in a parse event handler handling the start of a parent element. When deactivating child parsers of a fragment
+        * parser CPU resources can be saved as less XML Parse Event Listeners have to be iterated
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	*/
+    _activateChildParsers : function() {
+        Collections.each(this.childParsers, function(parser) {
+            parser.parserActivated();
+        });
+    },
+
+    /**
+        * Method called by XML Parse Event Listeners to deactivate child parsers. This method is normally called
+        * in a parse event handler handling the end of a parent element.
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	*/
+    _deactivateChildParsers : function() {
+        Collections.each(this.childParsers, function(parser) {
+            parser.parserDeactivated();
+        });
+    },
+
+    /**
+    	* XML Parse Event Handler definition
+    	*
+    	* @callback XMLFragmentParser~ParseEventHandler
+    	* @param {XMLStreamConstants} event event which triggered that
+    	* @param {XMLStreamReader} xmlStreamReader xml stream reader to extract information from the document
+    	*/
+
+    /**
+    	* Method to add an XML Parse Event Handler to the Fragment Parser. XML Parse Event Handlers are
+    	* added in the addedToDocument method.
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {XMLStreamConstants} event event when this parse event handler is to be fired
+    	* @param {string} name name of the parse event handler
+    	* @param {ParseEventHandler} handler handler function of the parse event handler. The handler function is normally a member of the Fragment parser
+    	*/
+    _addParseEventHandler : function(event, name, handler) {
+        Logger.info('Added parse event handler');
+        this.parseEventHandlers.add({event: event, context: this, name : name, handler: handler, active: false});
+    },
+
+    /**
+    	* Shortcut to add an XML Parse event handler for the START_ELEMENT event and a specified element name.
+    	*
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {string} elementName XML element name to trigger the provided handler
+    	* @param {parseEventHandler} handler handler function of the parse event handler. The handler function is normally a member of the Fragment parser
+    	*/
+    _addBeginElementParseEventHandler : function(elementName, handler) {
+        Logger.info('Added element start parse event handler');
+        this.parseEventHandlers.add({event: dw.io.XMLStreamConstants.START_ELEMENT, context: this, name : 'StartElementParseHandler', handler:
+			function(event, xmlStreamReader) {
+    if (xmlStreamReader.localName === elementName) {
+        handler.call(this, event, xmlStreamReader);
+    }
+			}, active: false});
+    },
+
+    /**
+    	* Shortcut to add an XML Parse event handler for the END_ELEMENT event and a specified element name.
+    	*
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {string} elementName XML element name to trigger the provided handler
+    	* @param {parseEventHandler} handler handler function of the parse event handler. The handler function is normally a member of the Fragment parser
+    	*/
+    _addEndElementParseEventHandler : function(elementName, handler) {
+        Logger.info('Added element start parse event handler');
+        this.parseEventHandlers.add({event: dw.io.XMLStreamConstants.END_ELEMENT, context: this, name : 'EndElementParseHandler', handler:
+			function(event, xmlStreamReader) {
+    if (xmlStreamReader.localName === elementName) {
+        handler.call(this, event, xmlStreamReader);
+    }
+			}, active: false});
+    },
+
+    /**
+    	* Event Handler definition
+    	*
+    	* @callback XMLFragmentParser~EventListener
+    	* @param {string} event event which was triggered
+    	* @param {object} object object attached to the emitted event
+    	*/
+
+    /**
+    	* Method to add an Event Listener to the Fragment Parser. Events are emitted by other XML Fragment Parsers. They can inform
+    	* other XMLFragmentParsers that a certain attribute or complete object has been found. This method is normally called in the
+    	* addedToDocument method
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {string} event event to attach a listener to
+    	* @param {EventListener} handler function to be called when event is emitted
+    	* @param {Object} context reference of the "this" pointer in the handler function
+    	*/
+    _addEventListener : function(event, handler, context) {
+        this.eventListener.add({event : event, handler : handler, context : context});
+    },
+
+    /**
+    	* Method to remove an Event Listener from the Fragment Parser.
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {string} event event to remove the listener from
+    	* @param {EventListener} listener Listener to remove
+    	*
+    	*/
+    _removeEventListener : function(event, handler) {
+        this.document.messageQueue.off(event, handler);
+    },
+
+    /**
+    	* Helper method to check if it is a valid parser
+        *
+    	* @private
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {XMLFragmentParser} parser XML fragment parser to be checked
+    	*
+    	* @returns {boolean} true if the argument is a valid XML Fragment Parser
+    	*
+    	*/
+    _isValidParser : function(parser) {
+        return parser.parentParser !== undefined && parser.document !== undefined && parser.parseEventHandlers !== undefined;
+    },
+
+    /**
+    	* Sets the Document recursively on Child XML Fragment Parsers if that did not already happen.
+    	* This method is only called by parent XML Fragment Parsers and the Document.
+        *
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*
+    	* @param {Document} document the Child XML Fragment Parser have to be attached to
+    	*
+    	*
+    	*/
+    recursivelySetDocument : function(document) {
+        Collections.each(this.childParsers, function(parser) {
+
+            if (this._isValidParser(parser)) {
+
+                var documentAlreadySet = parser.document;
+
+                parser.parentParser = this;
+                parser.document = document;
+
+                if (empty(documentAlreadySet)) {
+                    parser.addedToDocument();
+                    document.addEventHandlers(parser.parseEventHandlers);
+                }
+
+                parser.recursivelySetDocument(document);
+            }
+        }, this);
+    },
+
+    /**
+    	* Called by the XML Fragment parser once one complete object has been parsed. The transformation of the
+    	* parsed data e.g. writing the data into another XML Stream happens here.
+    	* This method must be implemented by the derived object
+    	*
+    	* @abstract
+    	* @public
+    	* @memberof XMLFragmentParser
+    	* @instance
+    	*/
+    process : function() {
+        throw new XMLParseError('Method "process" of XMLFragmentParser is not implemented');
+    }
+
+});
+
+if (typeof (exports) !== 'undefined') {
+    exports.XMLFragmentParser = XMLFragmentParser;
+}

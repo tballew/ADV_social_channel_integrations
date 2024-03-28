@@ -1,0 +1,717 @@
+{
+    "step-types": {
+        "script-module-step": [
+            {
+                "@type-id": "custom.CustomFeeds.ProductFullFeed",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Export Social Channels Feeds",
+                "module": "int_socialfeeds/cartridge/scripts/export/pipelet/CreateCustomFeedsExportMgr",
+                "function": "generate",
+                "timeout-in-seconds": "86400",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "IsDisabled",
+                            "description": "Mark the step as disabled. This will skip the step and returns a OK status",
+                            "@type": "boolean",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "ExportCatalogs",
+                            "description": "Should we export catalogs?",
+                            "@type": "boolean",
+                            "default-value": true,
+                            "@required": false
+                        },
+                        {
+                            "@name": "Locales",
+                            "description": "Comma separated locales for which will be build a feed (in 'es_ES' format)",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "GroupLocaleExport",
+                            "description": "Whether to group locales when getting product fields.",
+                            "@type": "boolean",
+                            "@required": false
+                        },
+                        {
+                            "@name": "GenerateDeleteFeed",
+                            "description": "Whether to generate delete product feed or not",
+                            "@type": "boolean",
+                            "@required": false
+                        },
+                        {
+                            "@name": "CustomObjectIds",
+                            "description": "Comma separated custom object ids to build a feed. If empty it will execute all feeds.",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "Hostname",
+                            "description": "Host name for urls. If defined, this host name will be use for urls. ",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "NO_DATA",
+                            "description": "Used when there is no data to export."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.Snapchat",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Export Social Channels Feeds",
+                "module": "int_socialfeeds/cartridge/scripts/export/pipelet/CreateCustomFeedsExportMgr",
+                "function": "generate",
+                "timeout-in-seconds": "86400",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "IsDisabled",
+                            "description": "Mark the step as disabled. This will skip the step and returns a OK status",
+                            "@type": "boolean",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "ExportCatalogs",
+                            "description": "Should we export catalogs?",
+                            "@type": "boolean",
+                            "default-value": true,
+                            "@required": false
+                        },
+                        {
+                            "@name": "DeltaCatalogInDays",
+                            "description": "Catalog delta export for last X days; Set 0 to do full export.",
+                            "@type": "double",
+                            "default-value": 0,
+                            "@required": false
+                        },
+                        {
+                            "@name": "CustomObjectIds",
+                            "description": "Comma separated custom object ids to build a feed. If empty it will execute all feeds.",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "Hostname",
+                            "description": "Host name for urls. If defined, this host name will be used for urls. ",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "NO_DATA",
+                            "description": "Used when there is no data to export."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.OCI.TriggerExport",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Trigger Export of OCI Inventory File",
+                "module": "int_socialfeeds/cartridge/scripts/oci/jobs/export.js",
+                "function": "trigger",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "OCICustomObjectId",
+                            "description": "OCIExport custom object's ID",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.OCI.DownloadExport",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Trigger Export of OCI Inventory File",
+                "module": "int_socialfeeds/cartridge/scripts/oci/jobs/export.js",
+                "function": "download",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX/src'",
+                            "@type": "string",
+                            "@trim": true,
+                            "@required": true
+                        },
+                        {
+                            "@name": "OCICustomObjectId",
+                            "description": "OCIExport custom object's ID",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.OCI.RetryDownloadExport",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "A new attempt to Trigger OCI Inventory File Export",
+                "module": "int_socialfeeds/cartridge/scripts/oci/jobs/export.js",
+                "function": "retryDownload",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX/src'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "OCICustomObjectId",
+                            "description": "OCIExport custom object's ID",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.OCI.CopyFiles",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "true",
+                "@supports-parallel-execution": "false",
+                "description": "Copy OCI Inventory File Export to the specified folder",
+                "module": "int_socialfeeds/cartridge/scripts/oci/jobs/export.js",
+                "function": "copyOCIFiles",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "destinationPath",
+                            "description": "Path relative to 'IMPEX/src'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.OCI.DeltaExport",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Trigger Export of OCI Inventory File",
+                "module": "int_socialfeeds/cartridge/scripts/oci/jobs/export.js",
+                "function": "delta",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX/src'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "OCICustomObjectId",
+                            "description": "OCIExport custom object's ID",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.GoogleLIA.StoresPricingExport",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Triggers export of store based pricebooks based on assignments XML generated at {FolderPath}/assignments/.",
+                "module": "int_socialfeeds/cartridge/scripts/store/pricebook/jobs/export.js",
+                "function": "execute",
+                "timeout-in-seconds": "7200",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX/src'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "WARN",
+                            "description": "Used when there is expected exception."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.ProductDeltaFeed",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "@supports-parallel-execution": "false",
+                "description": "Export Social Channels Feeds",
+                "module": "int_socialfeeds/cartridge/scripts/export/pipelet/CreateCustomFeedsExportMgr",
+                "function": "generate",
+                "timeout-in-seconds": "86400",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "IsDisabled",
+                            "description": "Mark the step as disabled. This will skip the step and returns a OK status",
+                            "@type": "boolean",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "ExportCatalogs",
+                            "description": "Should we export catalogs?",
+                            "@type": "boolean",
+                            "default-value": true,
+                            "@required": false
+                        },
+                        {
+                            "@name": "DeltaCatalogInDays",
+                            "description": "Catalog delta export for last X days; Set 0.1 to do delta updated products on last 2.4 hours",
+                            "@type": "double",
+                            "default-value": 1,
+                            "min-value": 0.01,
+                            "@required": true
+                        },
+                        {
+                            "@name": "Locales",
+                            "description": "Comma separated locales for which will be build a feed (in 'es_ES' format)",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "GroupLocaleExport",
+                            "description": "Whether to group locales when getting product fields.",
+                            "@type": "boolean",
+                            "@required": false
+                        },
+                        {
+                            "@name": "GenerateDeleteFeed",
+                            "description": "Whether to generate delete product feed or not",
+                            "@type": "boolean",
+                            "@required": false
+                        },
+                        {
+                            "@name": "CustomObjectIds",
+                            "description": "Comma separated custom object ids to build a feed. If empty it will execute all feeds.",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "Hostname",
+                            "description": "Host name for urls. If defined, this host name will be use for urls. ",
+                            "@type": "string",
+                            "@required": false,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "SKIP",
+                            "description": "Used when the step is disabled."
+                        },
+                        {
+                            "@code": "NO_DATA",
+                            "description": "Used when there is no data to export."
+                        },
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.Delete",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "description": "Delete Files By Days Interval",
+                "module": "int_socialfeeds/cartridge/scripts/export/jobsteps/DeleteFiles.js",
+                "function": "execute",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "OlderThanDays",
+                            "description": "Delete file older than X days",
+                            "@type": "long",
+                            "@required": true,
+                            "default-value": 30,
+                            "min-value": 1
+                        },
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "FileExtension",
+                            "description": "File extension. ( E.G:. all, txt, csv, etc )",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true,
+                            "default-value": "all",
+                            "pattern": "[a-z]{3,4}$"
+                        },
+                        {
+                            "@name": "DeleteFileInSubfolders",
+                            "description": "Delete file in subfolders",
+                            "@type": "boolean",
+                            "@required": false
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.CompressFiles",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "false",
+                "description": "Compress a Files to .zip or .gzip",
+                "module": "int_socialfeeds/cartridge/scripts/export/jobsteps/CompressFiles.js",
+                "function": "execute",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "FolderPath",
+                            "description": "Path relative to 'IMPEX'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "FileExtension",
+                            "description": "Type of files to be compressed. To compress all types select all.",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": false,
+                            "default-value": "all",
+                            "enum-values": {
+                              "value": [ "csv", "tsv", "txt", "xml", "all" ]
+                            }
+                        },
+                        {
+                            "@name": "CompressExtension",
+                            "description": "Format to compress the files.",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true,
+                            "default-value": "zip",
+                            "enum-values": {
+                              "value": [ "zip", "gzip" ]
+                            }
+                        },
+                        {
+                            "@name": "CompressFileInSubfolders",
+                            "description": "Compress file in subfolders.",
+                            "@type": "boolean",
+                            "@required": false
+                        },
+                        {
+                            "@name": "RemoveUncompressedFiles",
+                            "description": "Remove original files for compressed ones.",
+                            "@type": "boolean",
+                            "@required": false
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.CopyFiles",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "true",
+                "description": "Copy Files By Export Social Channels Feeds to another folder",
+                "module": "int_socialfeeds/cartridge/scripts/export/jobsteps/CopyFiles.js",
+                "function": "customFeedsCopy",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "destinationPath",
+                            "description": "Path relative to 'IMPEX'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            },
+            {
+                "@type-id": "custom.CustomFeeds.CopyLastModifiedFile",
+                "@supports-site-context": "true",
+                "@supports-organization-context": "true",
+                "description": "Copy the latest modified file in a folder to another desired folder",
+                "module": "int_socialfeeds/cartridge/scripts/export/jobsteps/CopyFiles.js",
+                "function": "copyLastestModifiedFile",
+                "timeout-in-seconds": "3600",
+                "transactional": "false",
+                "parameters": {
+                    "parameters": [
+                        {
+                            "@name": "originPath",
+                            "description": "Path relative to 'IMPEX'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        },
+                        {
+                            "@name": "destinationPath",
+                            "description": "Path relative to 'IMPEX'",
+                            "@type": "string",
+                            "@required": true,
+                            "@trim": true
+                        }
+                    ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when the step failed with an error."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when the step finished successfully."
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

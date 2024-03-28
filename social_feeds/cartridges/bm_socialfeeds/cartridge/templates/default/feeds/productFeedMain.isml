@@ -1,0 +1,56 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8" compact="true" />
+    <isscript>
+		var resources = JSON.stringify({
+            urlAllSites : URLUtils.url('BMCustomFeeds-GetAllSites').toString(),
+            urlReadObjects : URLUtils.url('ObjectStore-ReadObjects').toString(),
+            urlDeleteObjects : URLUtils.url('ObjectStore-DeleteObject').toString(),
+            urlCreateObjects : URLUtils.url('ObjectStore-CreateObject').toString(),
+            urlSaveObjects : URLUtils.url('ObjectStore-SaveObject').toString(),
+		});
+	</isscript>
+	<script type="text/javascript">
+		var resources = <isprint value="${resources}" encoding="off">;
+	</script>
+
+    <link rel="stylesheet" href="${URLUtils.staticURL('css/salesforce-lightning-design-system.min.css')}" />
+    <link rel="stylesheet" href="${URLUtils.staticURL('css/socialfeedstyle.css?v=02')}" />
+
+    <div class="hidden_fields" style="display: none;"></div>
+    <div class="site-main-stage slds-box slds-theme_default">
+        <div class="slds-grid slds-grid_vertical">
+            <div class="slds-col slds-col--h-1">
+
+                <h2 class="slds-text-heading_large">Product Social Feeds Definition</h2>
+                <h3 class="slds-text-heading_small">Configure your product social feeds using predefined templates
+                </h3>
+
+            </div>
+            <div class="slds-col slds-col__content">
+
+                <div class="slds-grid">
+                    <div class="slds-col slds-col--1 slds-box slds-size_1-of-3">
+                        <isinclude template="feeds/productfeeds.isml"></isinclude>
+                    </div>
+
+                    <div class="slds-col slds-col--2 slds-col__content slds-box slds-size_2-of-3">
+                        <isinclude template="feeds/feedData.isml"></isinclude>
+                    </div>
+                    <iscomment>
+                        In the future we will activate the product picker and the template preview area
+                    </iscomment>
+                    <iscomment> <div class="slds-col slds-col--3 slds-size_1-of-4 slds-box">
+                        <span class="slds-title">Feed preview</span>
+                        <div class="slds-form-element__control">
+                            <textarea id="test-gen-feed-preview" placeholder="" class="slds-textarea"></textarea>
+                        </div>
+                    </div> </iscomment>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalTargetPlace"></div>
+
+    <script src="${URLUtils.absStatic('/js/mainFeedPanel.js?v=148')}" type="text/javascript"></script>
+</isdecorate>

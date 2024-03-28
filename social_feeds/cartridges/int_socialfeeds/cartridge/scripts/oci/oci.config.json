@@ -1,0 +1,31 @@
+{
+    "filenames": {
+        "locations": "oci-locations-full-export-_siteid_-_timestamp_.txt",
+        "groups": "oci-location-groups-full-export-_siteid_-_timestamp_.txt",
+        "deltaLocations": "oci-locations-delta-export-_siteid_-_timestamp_.txt",
+        "deltaGroups": "oci-location-groups-delta-export-_siteid_-_timestamp_.txt"
+    },
+    "services": {
+        "auth": "oci.export.auth",
+        "export": "oci.export.full",
+        "download": "oci.export.download",
+        "delta": "oci.export.delta"
+    },
+    "endpoints": {
+        "export": {
+            "full": "/inventory/impex/v1/organizations/tenant_group_id/availability-records/exports",
+            "delta": "/inventory/availability/v1/organizations/tenant_group_id/availability-records/actions/get-deltas"
+        }
+    },
+    "customObject": {
+        "extendedExportList": "OCIExport",
+        "defaultDataJSON": {
+            "exportResult": {
+                "locations": {},
+                "locationGroups": {}
+            },
+            "deltaTokenLocations": "",
+            "deltaTokenGroups": ""
+        }
+    }
+}

@@ -1,0 +1,189 @@
+
+var WebDAVClient = require('dw/net/WebDAVClient');
+var FTPClient = require('dw/net/FTPClient');
+var SFTPClient = require('dw/net/SFTPClient');
+
+var parseUri = require('/bc_library/cartridge/scripts/remote/libUrl.ds').parseUri;
+var systemClients = {};
+
+/**
+ * A utility class, which abstracts the use of FTP Client and Web DAV client of the demandware API in order to allow streamlined processes without worrying about the used protocol.
+ * The FTP API is master and the WebDAV is bent.
+ *
+ * @param {string} url - the url to connect the transferclient to
+ * @param {string} serverType - a value, either SFTP, FTP or WEBDAV
+ * @param {string} userName - the username the transferclient connects to
+ * @param {string} password - the password the transferclient connects to
+ * @param {int} timeout - the timeout in milliseconds for the client
+ */
+function TransferClient(url, serverType, userName, password, timeout) {
+    var parentArguments = arguments;
+
+    this.transferClientConnected = false;
+    /**
+	*	Initializes the underlying system objects and handy library objects
+	**/
+    this.init = function() {
+        // legacy mode for different parameter order
+        if (url.indexOf('://') == -1) {
+            // swap values of parameter to ensure correct legacy behaviour, if first parameter does not follow url pattern
+            [url, serverType] = [serverType, url];
+        }
+
+        this.urlObject = parseUri(url);
+
+        // parse server type from url, if not specifically set
+        if (typeof (serverType) == 'undefined')  {
+            if (this.urlObject.protocol == "ftp") {
+                this.serverType = "FTP";
+            } else if (this.urlObject.protocol == "sftp") {
+                this.serverType = "SFTP";
+            } else {
+                this.serverType = "WEBDAV";
+            }
+        } else {
+            this.serverType = serverType;
+        }
+
+        serverType = this.serverType;
+
+        if (!empty(userName))  {
+            this.userName = userName;
+        }
+        else {
+            this.userName = this.urlObject.user;
+        }
+
+        if (!empty(password))  {
+            this.password = password;
+        }
+        else {
+            this.password = this.urlObject.password;
+        }
+        
+        this.timeout = timeout || 1000;
+
+        this.urlString = url;
+
+        this.systemClient = null;
+
+        var path = this.urlObject.path;
+
+        if (path.substring(path.length - 1, path.length) != "/") {
+            this.urlObject.path = this.urlObject.path + "/";
+        }
+    };
+
+    this.establishConnection = function() {
+        if (empty(systemClients[this.serverType + this.userName + this.urlObject.host]) ||
+            ((this.serverType == "FTP" || serverType == "SFTP") && !systemClients[this.serverType + this.userName + this.urlObject.host].connected)) {
+              
+            if (this.serverType == "FTP" || serverType == "SFTP") {
+                this.initFTP();
+            } else {
+                this.initWebDav();
+            }
+            var systemClient = this.systemClient;
+
+            systemClients[this.serverType + this.userName + this.urlObject.host] = this.systemClient;
+        } else {
+            var localSystemClients = systemClients;
+            var currentSystemClient = systemClients[this.serverType + this.userName + this.urlObject.host];
+
+            this.systemClient = currentSystemClient;
+        }
+    };
+
+    /**
+    	*	Initialises the web dav client
+    	**/
+    this.initWebDav = function() {
+        if (empty(this.userName)) {
+            this.systemClient = new WebDAVClient(this.urlObject.protocol + "://" + this.urlObject.host);
+        } else {
+            if (empty(this.password)) {
+                throw (new Error("Unsupported Configuration: No password provided for username " + this.userName));
+            }
+            this.systemClient = new WebDAVClient(this.urlObject.protocol + "://" + this.urlObject.host, this.userName, this.password);
+        }
+    };
+
+    /**
+    	*	Initialises the FTP client
+    	**/
+    this.initFTP = function() {
+        if (serverType == "FTP") {
+            this.systemClient = new FTPClient();
+        } else {
+            this.systemClient = new SFTPClient();
+        }
+        this.systemClient.setTimeout(this.timeout);
+
+        if (empty(this.userName)) {
+            if (this.urlObject.protocol == "SFTP") {
+                throw (new Error("Unsupported Configuration: User-ID and Password are mandatory for SFTP-Connection."));
+            }
+
+            if (empty(this.urlObject.port)) {
+                this.systemClient.connect(this.urlObject.host);
+            } else {
+                this.systemClient.connect(this.urlObject.host, this.urlObject.port);
+            }
+        } else {
+            if (empty(this.password)) {
+                throw (new Error("Unsupported Configuration: No password provided for username " + userName));
+            }
+
+            if (empty(this.urlObject.port)) {
+                this.systemClient.connect(this.urlObject.host, this.userName, this.password);
+            } else {
+                this.systemClient.connect(this.urlObject.host, this.urlObject.port, this.userName, this.password);
+            }
+        }
+        //this.systemClient.cd(this.urlObject.path);
+    };
+
+    /**
+    	*	Proxy for the system client. It will delegate each function call to the respective call on webdav-, ftp- or sftp client.
+    	*/
+    this.__noSuchMethod__ = function(id, arguments) {
+        this.establishConnection();
+
+        // proxy disconnect to void/null as webdav is stateless
+        var newID = id;
+        var serverType = this.serverType;
+
+        if (id == "disconnect" && this.serverType == "WEBDAV") {
+            newID = 'close';
+        }
+        // proxy list method to webdavs getproperty method
+        if (id == "list" && this.serverType == "WEBDAV") {
+            var list = arguments[0];
+
+            return this.systemClient.propfind(arguments[0]);
+        }
+        var returns = this.systemClient[newID].apply(this.systemClient, arguments);
+
+        return returns;
+    };
+
+    // run initialization
+    this.init();
+}
+
+TransferClient.closeAll = function() {
+    for (var name in systemClients) {
+        var systemClient = systemClients[name];
+
+        if (typeof (systemClient) != 'function') {
+            if ('close' in systemClient) {
+                systemClient.close();
+            }
+
+            if ('disconnect' in systemClient) {
+                systemClient.disconnect();
+            }
+        }
+    }
+};
+exports.TransferClient = TransferClient;

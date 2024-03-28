@@ -1,0 +1,54 @@
+importPackage( dw.system );
+importPackage( dw.catalog );
+importPackage( dw.util );
+
+importScript('export/CatalogExportMgr.ds');
+importScript('export/handlers/AbstractExportHandler.ds');
+
+// Hack, because vars cannot be imported in DW, only functions
+function getCustomFeedsExportMgr() {
+    return CustomFeedsExportMgr;
+}
+
+/**
+ * Distribute handlers across context object specific export manager:
+ * catalog|customer|order
+ */
+function CustomFeedsExportMgr(ExecutionContexts){
+    this.logger = dw.system.Logger.getLogger('GlobalFeedExport', 'GlobalFeedExport');
+    this.handlers = [];
+    this.executionContexts = ExecutionContexts;
+}
+
+CustomFeedsExportMgr.prototype = {
+        /**
+         * Registers a new export handler which needs to be a subclass of
+         * {@link AbstractExportHandler}.
+         */
+        registerExportHandler : function(handler){
+            this.handlers.push(handler);
+        },
+        /**
+         * Runs the export and notifies all registered handlers
+         */
+        runExport : function(){
+            // init catalog export mngr
+            var CatalogExportMgr = getCatalogExportMgr();
+            var catalogExportMgr = new CatalogExportMgr(this.executionContexts);
+
+            for each (var handler in this.handlers) {
+                catalogExportMgr.registerExportHandler(handler);
+            };
+
+            // execute selected in workflow component exports
+            try {
+                catalogExportMgr.runExport();
+            } catch (error) {
+                return new Status(Status.ERROR, 'ERROR', error.message);
+            }
+        }
+}
+
+if(typeof exports !== 'undefined') {
+    exports.CustomFeedsExportMgr = CustomFeedsExportMgr;
+}

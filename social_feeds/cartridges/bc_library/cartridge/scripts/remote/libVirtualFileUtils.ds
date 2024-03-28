@@ -1,0 +1,169 @@
+/*
+* usage
+importScript("bc_library:io/libVirtualFileUtils.ds");**DEPRECATED**
+require("bc_library/cartridge/scripts/io/libVirtualFileUtils").VirtualFileUtils;
+*/
+
+importPackage(dw.io);
+importPackage(dw.system);
+
+var LocalFileUtils = require('/bc_library/cartridge/scripts/io/libFileUtils.ds').FileUtils;
+
+function VirtualFileUtils() {
+
+}
+
+/**
+ * Copy source file to target location. All directories will be created if is necessary.
+ *
+ * @param {Object} source
+ * @param {Object} target
+ */
+VirtualFileUtils.copyFile = function(source, target) {
+
+    var action = "";
+
+    if (('virtual' in source) && ('virtual' in target)) {
+        VirtualFileUtils.copyRemotely(source, target);
+    } else if (('virtual' in source) && !('virtual' in target)) {
+        VirtualFileUtils.download(source, target);
+    } else if (!('virtual' in source) && ('virtual' in target)) {
+        VirtualFileUtils.upload(source, target);
+    } else {
+        LocalFileUtils.copyFile(source, target);
+    }
+};
+
+/**
+ * download files
+ *
+ * @param  {Object} source
+ * @param  {Object} target
+ */
+VirtualFileUtils.download  = function(source, target) {
+    if (!source.isDirectory()) {
+        source.transferClient.getBinary(source.getPath(), target);
+    } else {
+        // recursively download files
+    }
+};
+/**
+ * upload files
+ *
+ * @param  {Object} source
+ * @param  {Object} target
+ */
+VirtualFileUtils.upload  = function(source, target) {
+    if (!source.isDirectory()) {
+        target.transferClient.putBinary(target.getFullPath(), source);
+    } else {
+        // recursively upload files
+    }
+
+};
+
+/**
+ * Ensures existence of file directories
+ *
+ * @param {VirtualFile} targetFile
+ */
+VirtualFileUtils.ensureFileDirectories = function(targetFile) {
+    var targetFilePath = targetFile.fullPath;
+    var index = targetFilePath.lastIndexOf(File.SEPARATOR);
+    var directoryFilePath = targetFilePath.substr(0, index);
+
+    new File(directoryFilePath).mkdirs();
+};
+
+/**
+ * Find directory for given file
+ *
+ * @param {VirtualFile} file
+ */
+VirtualFileUtils.findFileDirectory = function(file) {
+    var filePath  = file.getFullPath();
+
+    var lastSlashIndex = filePath.lastIndexOf('/');
+    var directoryPath  = filePath.substring(0, lastSlashIndex);
+    var directory  = new File(directoryPath);
+
+    return directory;
+};
+
+/**
+ *
+ * Delete given derectory and all files and subdirectories in it
+ *
+ * @param {VirtualFile} file
+ */
+VirtualFileUtils.deleteDirectory = function(file) {
+    if (!file.isDirectory()) {
+        throw new Error("file instance is not directory");
+    }
+
+    var fileNames = file.list();
+
+    for (var fileName in fileNames) {
+        var filePath = file.getFullPath() + File.SEPARATOR + fileName;
+        var processedFile = new File(filePath);
+
+        if (processedFile.isDirectory()) {
+            VirtualFileUtils.deleteDirectory(processedFile);
+        } else {
+            processedFile.remove();
+        }
+    }
+
+    file.remove();
+};
+
+/**
+ *
+ * creates a file and it's parent folder in case it does not exist
+ *
+ * @param {VirtualFile} file
+ */
+VirtualFileUtils.createFileAndFolders = function(file) {
+    var path = file.fullPath.split(File.SEPARATOR);
+
+    path.pop();
+    var folder = new File(path.join(File.SEPARATOR));
+
+    if (!folder.exists()) {
+        folder.mkdirs();
+    }
+
+    if (!file.exists()) {
+        file.createNewFile();
+    }
+
+};
+
+/**
+ *
+ * Delete all files and directories in given directory, respectively - clear directory content.
+ *
+ * @param {VirtualFile} file
+ */
+VirtualFileUtils.emptyDirectory = function(file) {
+    if (!file.isDirectory()) {
+        throw new Error("file instance is not directory");
+    }
+
+    var fileNames = file.list();
+
+    for (var fileName in fileNames) {
+        var filePath = file.getFullPath() + File.SEPARATOR + fileName;
+        var processedFile = new File(filePath);
+
+        if (processedFile.isDirectory()) {
+            VirtualFileUtils.deleteDirectory(processedFile);
+        } else {
+            processedFile.remove();
+        }
+    }
+};
+
+if (typeof (exports) !== 'undefined') {
+    exports.VirtualFileUtils = VirtualFileUtils;
+}

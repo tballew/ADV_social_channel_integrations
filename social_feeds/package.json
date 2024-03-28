@@ -1,0 +1,9 @@
+{
+    "name": "social_feeds",
+    "scripts": {
+        "code:upload:feeds": "sgmf-scripts --uploadCartridge bc_library && sgmf-scripts --uploadCartridge bm_socialfeeds && sgmf-scripts --uploadCartridge int_socialfeeds"
+    },
+    "devDependencies": {
+        "sgmf-scripts": "^2.4.2"
+    }
+}

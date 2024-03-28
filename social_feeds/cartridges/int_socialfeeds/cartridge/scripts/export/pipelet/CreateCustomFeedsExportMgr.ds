@@ -1,0 +1,406 @@
+/**
+ * Creates and registers export handlers from their custom object definitions
+ *
+ *----------- used with Platform Job Framework
+ * @input ExportCustomers : Object
+ * @input DaysToExportCustomers : Object
+ * @input ExportCatalogs : Object
+ * @input ExportOrders : Object
+ * @input DaysToExportOrders : Object
+ * @input Locales : Object
+ * @input GroupLocaleExport : Object
+ * @input CustomObjectIds : Object
+ * @input Hostname : Object
+ * @input DeltaCatalogInDays : Number
+ * @input GenerateDeleteFeed : Object
+ *----------- used with Community Suite Job Framework
+ * @input WorkflowComponent : Object The WorkFlowComponentInstance of the current workflow
+ *----------- used alwys
+ * @input ExcludeRestrictedProducts : Object
+ * @input LocalizedCategories : Boolean
+ * @output CustomFeedsExportMgr : Object
+ *
+ */
+importPackage( dw.system );
+importPackage( dw.io );
+importScript('export/CustomFeedsExportMgr.ds');
+importScript('export/handlers/CSVExportHandler.ds');
+importScript('export/handlers/TemplateExportHandler.ds');
+importScript('helpers/customSocialFeeds.js');
+var CustomFeedsExportMgr = getCustomFeedsExportMgr();
+var CSVExportHandler = getCSVExportHandler();
+var TemplateExportHandler = getTemplateExportHandler();
+
+function execute( args : PipelineDictionary ) : Number
+{
+    var executionContexts = {
+                                ExportCatalogs : false,
+                                ExportOrders : false,
+                                ExportCustomers : false,
+                                DaysToExportCustomers : 1,
+                                DaysToExportOrders : 1,
+                                DeltaCatalogInDays : 0,
+                                GenerateDeleteFeed : false,
+                                GeneratedFiles : []
+                            };
+
+    if(args.WorkflowComponent != null) {
+        //if we execute via Community Job Framework
+        executionContexts.ExportCatalogs = args.WorkflowComponent.getParameterValue('ExportCatalogs');
+        executionContexts.ExportOrders = args.WorkflowComponent.getParameterValue('ExportOrders');
+        executionContexts.ExportCustomers = args.WorkflowComponent.getParameterValue('ExportCustomers');
+        executionContexts.DaysToExportCustomers = args.WorkflowComponent.getParameterValue('DaysToExportCustomers');
+        executionContexts.DaysToExportOrders = args.WorkflowComponent.getParameterValue('DaysToExportOrders');
+        executionContexts.Locales = args.WorkflowComponent.getParameterValue('Locales');
+        executionContexts.GroupLocaleExport = args.WorkflowComponent.getParameterValue('GroupLocaleExport');
+        executionContexts.CustomObjectIds = args.WorkflowComponent.getParameterValue('CustomObjectIds');
+        executionContexts.Hostname = args.WorkflowComponent.getParameterValue('Hostname');
+        executionContexts.DeltaCatalogInDays = args.WorkflowComponent.getParameterValue('DeltaCatalogInDays');
+        executionContexts.GenerateDeleteFeed = args.WorkflowComponent.getParameterValue('GenerateDeleteFeed');
+    } else {
+        //if we execute via Platform Job Framework
+        executionContexts.ExportCatalogs = args.ExportCatalogs;
+        executionContexts.ExportOrders = args.ExportOrders;
+        executionContexts.ExportCustomers = args.ExportCustomers;
+        executionContexts.DaysToExportCustomers = args.DaysToExportCustomers;
+        executionContexts.DaysToExportOrders = args.DaysToExportOrders;
+        executionContexts.Locales = args.Locales;
+        executionContexts.GroupLocaleExport = args.GroupLocaleExport;
+        executionContexts.CustomObjectIds = args.CustomObjectIds;
+        executionContexts.Hostname = args.Hostname;
+        executionContexts.DeltaCatalogInDays = args.DeltaCatalogInDays;
+        executionContexts.GenerateDeleteFeed = args.GenerateDeleteFeed;
+    }
+
+    var currentSite = dw.system.Site.getCurrent();
+    var allowedLocales  = currentSite.getAllowedLocales();
+    var paramLocales = [];
+    var locales = [];
+
+    if (executionContexts.Locales) {
+        paramLocales = executionContexts.Locales.split(',').map(function (current) {
+            return current.trim();
+        });
+    }
+
+    for (var i = 0; i < paramLocales.length; i++) {
+        var currentParamLocale = paramLocales[i];
+        if (allowedLocales.indexOf(currentParamLocale) >= 0) {
+            locales.push(currentParamLocale);
+        }
+    }
+
+    if (!locales.length) {
+        locales = [
+            currentSite.defaultLocale
+        ];
+    }
+
+    var localesForSocialCategory = getLocalesForSocialCategory(executionContexts);
+    if (!empty(localesForSocialCategory)) {
+        locales = localesForSocialCategory;
+    }
+
+    var exportMgr;
+
+    if (executionContexts.GroupLocaleExport) {
+        exportMgr = new CustomFeedsExportMgr(executionContexts);
+
+        if (locales.length > 0) {
+            var currentLocale = locales[0];
+            registerConfigurableHandlers(exportMgr, args.WorkflowComponent, dw.system.Site.getCurrent().getID(), executionContexts, currentLocale);
+        }
+    } else {
+        exportMgr = new CustomFeedsExportMgr(executionContexts);
+        for (var l = 0; l < locales.length; l++) {
+            var currentLocale = locales[l];
+            registerConfigurableHandlers(exportMgr, args.WorkflowComponent, dw.system.Site.getCurrent().getID(), executionContexts, currentLocale);
+        }
+    }
+
+    args.CustomFeedsExportMgr = exportMgr;
+
+    return PIPELET_NEXT;
+}
+
+function readConfigurationFromCustomObject(co, configSeparator, exportSeparator) {
+    var lines : Reader = new Reader(co.custom.configuration);
+    var config = {
+        separator: exportSeparator || configSeparator
+    };
+    var line;
+
+    while((line = lines.readLine()) !=null){
+        if(line.indexOf('separator ') == 0){
+            config.separator = line.substring(10);
+        }else if(!config.fields){
+            // use first line as fields
+            config.fields = appendMultiLocalesFields(line.split(configSeparator));
+        }else if(!config.header){
+            // if there are more lines, we previously read the header
+            config.header = config.fields;
+            config.fields = appendMultiLocalesFields(line.split(configSeparator));
+        }
+    }
+
+    return config;
+}
+
+/**
+ * Helper function which handles the custom objects
+ */
+function registerConfigurableHandlers(exportMgr, cmp, currentSite, executionContexts, locale){
+
+    var customFeedObjectIdList = [];
+    if (!empty(executionContexts.CustomObjectIds) && executionContexts.CustomObjectIds) {
+        customFeedObjectIdList = executionContexts.CustomObjectIds.split(',');
+    }
+
+    for each(var co in dw.object.CustomObjectMgr.getAllCustomObjects('SalesChannelFeedConfig')) {
+
+        if (customFeedObjectIdList.length > 0
+            && customFeedObjectIdList.indexOf(co.custom.id) === -1) {
+            continue;
+        }
+        //assign co to executionContexts
+        executionContexts.co = co;
+        // we should not register handlers, if current site is not configured
+        // for this custom feeds
+        var assignedSites : List = co.custom.assignedSites;
+
+        // skip the execution of current export handler, if workflow component
+        // does not enable it with a parameter
+        switch(co.custom.feedContext.value) {
+            case 'Catalog' :
+                if (!executionContexts.ExportCatalogs) {
+                    continue;
+                }
+                break;
+            case 'Order' :
+                if (!executionContexts.ExportOrders) {
+                    continue;
+                }
+                break;
+        }
+
+        if(assignedSites.indexOf(currentSite) === -1) {
+            if (cmp) {
+                cmp.addMessage('Attention -> Custom Feed is not configured to run for ' + currentSite + '. We will not register feed export handler.', 'INFO');
+            } else {
+                Logger.warn('Attention -> Custom Feed is not configured to run for ' + currentSite + '. We will not register feed export handler.');
+            }
+            continue;
+        }
+
+        var folder : File = new File(co.custom.folderName);
+        if(!folder.exists() && !folder.mkdirs()){
+            throw new Error('Could not create folder '+co.custom.folderName);
+        }
+
+        var deltaEnabled = executionContexts.DeltaCatalogInDays > 0;
+
+        var fileName = co.custom.fileName.replace(/\{\{[^}]*\}\}/g,function(a : String){
+            var parts : Array = a.split(/(?:\{\{| |\}\})/g);
+            var variable = parts[1];
+
+            if (!variable) return '';
+
+            switch (variable) {
+                case 'timestamp':
+                    var format = 'yyyyMMddhhmmss';
+                    parts.forEach(function(part : String){
+                        if(part.indexOf('format=') == 0){
+                            format = part.substring(0,part.length-1).substring(8);
+                        }
+                    });
+                    return dw.util.StringUtils.formatCalendar(Site.getCalendar(),format);
+                case 'countrycode':
+                    return dw.util.Locale.getLocale(Site.getCurrent().defaultLocale).country;
+                case 'site_id':
+                case 'siteId':
+                    return Site.getCurrent().ID;
+                case 'siteName':
+                case 'site_name':
+                    return dw.system.Site.getCurrent().getName();
+                case 'languagecode':
+                    return dw.util.Locale.getLocale(Site.getCurrent().defaultLocale).getISO3Language();
+                case 'locale':
+                    return locale || Site.getCurrent().defaultLocale;
+                case 'updateType':
+                case 'update_type':
+                    return deltaEnabled ? 'delta' : 'full';
+                default:
+                    return '';
+            }
+        });
+
+        var file = new File(folder,"TEMP_" + fileName);
+        var encoding = co.custom.fileEncoding || 'UTF-8';
+        if(!file.exists() && !file.createNewFile()){
+            throw new Error('Could not create export file');
+        }
+
+        if (cmp) {
+            cmp.addMessage('Registering Configurable Feed ' + co.custom.id, 'INFO');
+        } else {
+            Logger.info('Registering Configurable Feed ' + co.custom.id);
+        }
+
+        if (co.custom.type == 'XML') {
+            var localeContext = executionContexts.GroupLocaleExport ? locale : null;
+            exportMgr.registerExportHandler(
+                new TemplateExportHandler(
+                    new FileWriter(file, encoding),
+                    co.custom.configuration,
+                    co.custom.feedContext.value,
+                    co.custom.includeOfflineProducts,
+                    co.custom.includeOutOfStockProducts,
+                    co.custom.includeNoPriceProducts,
+                    co.custom.includeSearchableIfUnavailableProducts,
+                    co.custom.socialCategory,
+                    co.custom.googleShoppingCategories.value,
+                    executionContexts.Hostname,
+                    file,
+                    localeContext,
+                    executionContexts.Locales,
+                    executionContexts.LocalizedCategories,
+                    executionContexts.DeltaCatalogInDays,
+                    co.custom.exportCategoryId
+                )
+            );
+        } else if(co.custom.type == 'CSV') {
+            var config = readConfigurationFromCustomObject(co, /,(?![^="]*")/);
+            var localeContext = executionContexts.GroupLocaleExport ? locale : null;
+            exportMgr.registerExportHandler(new CSVExportHandler(
+                new FileWriter(file, encoding),
+                config.separator,
+                config.fields,
+                config.header,
+                co.custom.feedContext.value,
+                co.custom.includeOfflineProducts,
+                co.custom.includeOutOfStockProducts,
+                co.custom.includeNoPriceProducts,
+                co.custom.includeSearchableIfUnavailableProducts,
+                co.custom.socialCategory,
+                co.custom.googleShoppingCategories,
+                executionContexts.Hostname,
+                file,
+                locale,
+                executionContexts.Locales,
+                executionContexts.LocalizedCategories,
+                executionContexts.DeltaCatalogInDays,
+                executionContexts.GenerateDeleteFeed,
+                co.custom.exportCategoryId,
+                executionContexts.GeneratedFiles
+            ));
+        }
+    }
+}
+
+/**
+ * Helper function which handles the multilocales header and values rows
+ */
+function appendMultiLocalesFields(fields) {
+
+    var config_countries = require('*/cartridge/config/countries.json');
+    var countries = getLocalesFromCountries(config_countries);
+    var localeIds = [];
+
+    countries.forEach(function (country) {
+        //if (country.priceBooks) {
+            localeIds.push(country.id)
+        //}
+    });
+
+    var multiLocaleFields = [];
+    for each(var field : String in fields) {
+
+        if (field.toLowerCase().indexOf('_alllocales') !== -1) {
+
+            localeIds.forEach(function (localeId) {
+                multiLocaleFields.push(field.replace('_alllocales','_'+localeId));
+            });
+
+        } else {
+            multiLocaleFields.push(field);
+        }
+    }
+
+    return multiLocaleFields;
+
+}
+
+/**
+ *
+ * @param {Object[]} countries - Array of countries
+ * @return {Object[]} Array of locales, one for each country locale in the original config
+ */
+function getLocalesFromCountries(countries) { // eslint-disable-line no-shadow
+    var assign = function () {
+        var result = {};
+        Array.prototype.forEach.call(arguments, function (argument) {
+            if (typeof argument === 'object') {
+                Object.keys(argument).forEach(function (key) {
+                    result[key] = argument[key];
+                });
+            }
+        });
+        return result;
+    };
+    return countries.reduce(function (locales, country) {
+        if (!empty(country.locales)) {
+            country.locales.forEach(function (locale) {
+                var localeObj = assign(country, {
+                    id: locale
+                });
+
+                locales.push(localeObj);
+            });
+        } else if (!empty(country.id)) {
+            // Fall back to the SFRA structure
+            locales.push(country);
+        }
+
+        return locales;
+    }, []);
+}
+
+/**
+ * Function that calls the CustomFeeds-Process pipeline.
+ * To be used for executing the feeds export through the job framework, going around
+ * the timeout issues when executing the pipeline step type, and in place of
+ * the existing script for a custom step type, which is incomplete and broken
+ *
+ * @param {Object} parameters The job's parameters
+ * @returns {dw/system/Status} The status of the job
+ */
+function generate(parameters, stepExecution) {
+    var Pipeline = require('dw/system/Pipeline');
+    var Status = require('dw/system/Status');
+    var StepHelper = require('int_socialfeeds/cartridge/scripts/helpers/stepHelper');
+
+    //  Is the current jobStep being skipped?  If so, exit early
+    if (StepHelper.isDisabled(parameters)) {
+        return new Status(Status.OK, 'SKIP', 'Step disabled, skip it...');
+    }
+
+    var result = Pipeline.execute('CustomFeeds-Process', parameters);
+
+    if (!result || result.EndNodeName !== 'OK') {
+        return new Status(Status.ERROR);
+    } else if (result.DoIt && result.DoIt instanceof dw.system.Status && !empty(result.DoIt.code) && result.DoIt.code.toUpperCase() == 'ERROR') {
+        return result.DoIt;
+    }
+
+    var generatedFiles = result.CustomFeedsExportMgr.executionContexts.GeneratedFiles;
+    if(generatedFiles.length > 0){
+        stepExecution.getJobExecution().context.put('qtyFilesToCopy', generatedFiles.length);
+        generatedFiles.forEach(function(gf,idx){stepExecution.getJobExecution().context.put('copyFile' + idx, gf)});
+    }
+
+    return new Status(Status.OK);
+}
+
+if (typeof exports !== 'undefined') {
+    exports.generate = generate;
+}

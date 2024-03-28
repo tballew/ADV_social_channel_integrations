@@ -1,0 +1,991 @@
+/**
+ * Utility class to map a given field to a product attribute value
+ *
+ * @namespace
+ */
+var ProductFieldMapper = function(){};
+
+ProductFieldMapper.currentFeedCatalogs;
+ProductFieldMapper.currentFeedHost;
+ProductFieldMapper.currentFeedLocale;
+
+/**
+ * Supported system attributes
+ */
+ProductFieldMapper.SYSTEM_ATTRIBUTES = ['EAN', 'ID', 'UPC', 'brand', 'creationDate', 'facebookEnabled',
+                                        'lastModified', 'longDescription', 'manufacturerName', 'manufacturerSKU',
+                                        'minOrderQuantity', 'name', 'onlineFlag', 'onlineFrom', 'onlineTo',
+                                        'pageDescription', 'pageKeywords', 'pageTitle', 'pageURL', 'pinterestEnabled',
+                                        'searchPlacement', 'searchRank', 'searchable', 'searchableIfUnavailable',
+                                        'shortDescription', 'siteMapChangeFrequency', 'siteMapIncluded', 'siteMapPriority',
+                                        'stepQuantity', 'storeReceiptName', 'storeTaxClass', 'taxClassID',
+                                        'template', 'unit'];
+
+ProductFieldMapper.ACTIVEDATA_ATTRIBUTES = [];
+
+var ArrayList = require('dw/util/ArrayList');
+var URLUtils = require('dw/web/URLUtils');
+var ProductAvailabilityModel = require('dw/catalog/ProductAvailabilityModel');
+
+var logger = require('dw/system/Logger').getLogger('GlobalFeedExport', 'ProductFieldMapper');
+
+var AVAILABILITY_ENUM = {};
+AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_IN_STOCK] = 'in stock';
+AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_NOT_AVAILABLE] = 'out of stock';
+AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_PREORDER] = 'preorder';
+AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_BACKORDER] = 'backorder';
+
+var GOOGLE_AVAILABILITY_ENUM = {};
+GOOGLE_AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_IN_STOCK] = 'in_stock';
+GOOGLE_AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_NOT_AVAILABLE] = 'out_of_stock';
+GOOGLE_AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_PREORDER] = 'preorder';
+GOOGLE_AVAILABILITY_ENUM[ProductAvailabilityModel.AVAILABILITY_STATUS_BACKORDER] = 'backorder';
+
+var CONDITION_ENUM = {};
+const CONDITION_VALUES = {
+    CONDITION_NEW: 'new',
+    CONDITION_REFURBISHED: 'refurbished',
+    CONDITION_USED: 'used',
+    CONDITION_DISCONTINUED: 'discontinued'
+}
+CONDITION_ENUM[CONDITION_VALUES.CONDITION_NEW] = 'new';
+CONDITION_ENUM[CONDITION_VALUES.CONDITION_REFURBISHED] = 'refurbished';
+CONDITION_ENUM[CONDITION_VALUES.CONDITION_USED] = 'used';
+CONDITION_ENUM[CONDITION_VALUES.CONDITION_DISCONTINUED] = 'discontinued';
+
+const CATEGORY_ATTRIBUTE = {
+    ID: 'ID',
+    NAME: 'displayName'
+}
+
+const VARIATION_ATTRIBUTES = {
+    COLOR: 'color',
+    SIZE: 'size'
+}
+
+const getCustomFieldDetails = function (str){
+    var result = {
+        isCustomField: false,
+        attrName: null,
+        fx: null
+    };
+    if (!str) return result;
+    if (str.indexOf('custom.') === 0 || str.indexOf('custom:') === 0 || str.indexOf('c_') === 0) {
+        result.isCustomField = true;
+        if (str.indexOf('c_') === 0) {
+            result.attrName = str.substring(2);
+            result.fx = ProductFieldMapper.getCustomAttributes;
+            return result;
+        }
+        result.attrName = str.substring(7);
+        result.fx = ProductFieldMapper.processCustomAttribute;
+        return result;
+    }
+    return result;
+};
+
+const cleanField = function (str) {
+    if (!str) return '';
+    // if this is a custom field, do not clean the field
+    if (getCustomFieldDetails(str).isCustomField) {
+        return str;
+    }
+    // replace all special characters and convert to lowercase
+    return str.replace(/[^a-zA-Z0-9 ]/g, '').toLowerCase();
+};
+
+/**
+ * Returns the value of the product for the given field. Field is eiher a system
+ * attribute or a custom attribute prefixed with 'custom.'
+ */
+ProductFieldMapper.getField = function(product : dw.catalog.Product, field : String, format : String, sep : String, type : String, sep2 : String, postProcess : String, attributes : String, socialCategory : String, googleShoppingCategories : String){
+    // no field, can't do anything
+    if (empty(field) || product == null) {
+        return '';
+    }
+    // ensure field and format are not case-sensitive
+    var systemAttributeField = field;
+    var customAttrDetails = getCustomFieldDetails(field);
+    field = cleanField(field);
+    format = cleanField(format);
+
+    try {
+        var optionalContainer = (product.isMaster() || !product.isVariant()) ? product : product.variationModel.master;
+        if (sep == 'constant') { //returns field id; usage: [field "type=constant"]
+            return field;
+        }
+
+        if (field == 'image' || field == 'additionalimage') {
+            var images = !empty(type) ? product.getImages(type || format) : product.getImages('large');
+            return images && images.length ? images.get(0).getAbsURL().toString() : '';
+        }
+
+        if (field == 'imagejsondata') {
+            var images = !empty(type) ? product.getImages(type || format) : product.getImages('large');
+            var arr = [];
+            for each (var image in images) {
+                arr.push(image.getAbsURL().toString());
+            }
+            var jsonData = {
+                "images": arr
+            };
+            return JSON.stringify(jsonData);
+        }
+
+        if(field == "timestamp"){
+            format = format || 'yyyyMMddhhmmss';
+            return dw.util.StringUtils.formatCalendar(dw.system.Site.getCalendar(), format);
+        }
+        if(field == "countrycode"){
+            return this.currentFeedLocale ? dw.util.Locale.getLocale(this.currentFeedLocale).country
+                : dw.util.Locale.getLocale(dw.system.Site.getCurrent().defaultLocale).country;
+        }
+        if(field == "sitename"){
+            return dw.system.Site.getCurrent().getName();
+        }
+        if(field == "defaultlocale"){
+            return dw.system.Site.getCurrent().getDefaultLocale();
+        }
+        if(field == 'url'){
+            return dw.web.URLUtils.https('Product-Show','pid',product.ID);
+        }
+        if(field == 'landingurl'){
+            return dw.web.URLUtils.abs('Product-Show','pid',product.ID).toString();
+        }
+        if(field == 'description'){
+            return product.getShortDescription().getMarkup() || product.getLongDescription().getMarkup();
+        }
+	    if(field == 'brand') {
+            var brand = !empty(product.getBrand()) ? product.getBrand() : product.manufacturerSKU;
+            return !empty(brand) ? brand : dw.system.Site.getCurrent().getID();
+        }
+	    if(field == 'age' || field == 'agegroup') {
+            return product.custom && 'kidsAge' in product.custom && product.custom.kidsAge ? product.custom.kidsAge : 'adult';
+
+        }
+        if(field == 'gender') {
+            if ('gender' in product.custom && !empty(product.custom.gender)) return product.custom.gender;
+            else {
+                var categories = product.getAllCategories().toArray();
+                if (!categories.length && optionalContainer) {
+                    categories = optionalContainer.getAllCategories().toArray();
+                }
+                const categoriesW = categories.filter(function(category) {
+                    const displayName = String(category.displayName).toLowerCase();
+                    const categoryId = String(category.ID).toLowerCase();
+                    const regex = /\bmen\b/;
+                    return (displayName.indexOf('women') > -1 && !regex.test(displayName)) || (categoryId.indexOf('women') > -1 && !regex.test(categoryId));
+                });
+                const categoriesM = categories.filter(function(category) {
+                    const displayName = String(category.displayName).toLowerCase();
+                    const categoryId = String(category.ID).toLowerCase();
+                    return (displayName.indexOf('men') > -1 && displayName.indexOf('women') < 0) || (categoryId.indexOf('men') > -1 && categoryId.indexOf('women') < 0);
+                });
+                if (categoriesW.length > 0 && categoriesM.length > 0) return 'unisex';
+                else if (categoriesW.length > 0 && categoriesM.length == 0) return 'female';
+                else if (categoriesW.length == 0 && categoriesM.length > 0) return 'male';
+                else return '';
+            }
+        }
+	    if(field == 'adult') {
+            return product.custom && 'adult' in product.custom && product.custom.adult ? product.custom.adult : 'No';
+
+        }
+	    if(field == 'color') {
+            return product.custom && 'refinementColor' in product.custom && product.custom.refinementColor ? product.custom.refinementColor : 'None';
+
+        }
+        if(field == 'condition') {
+            return product.custom && 'condition' in product.custom && product.custom.condition ? product.custom.condition : CONDITION_ENUM[CONDITION_VALUES.CONDITION_NEW];
+	    }
+        if (field == "isbundle") {
+            return product.bundle;
+        }
+	    if(field == 'itemgroupid') {
+            var defaultGroupId = '';
+            if (format == 'nonempty') {
+                defaultGroupId = product.ID;
+            }
+            return product.isVariant() && product.variationModel.master ? product.variationModel.master.ID : defaultGroupId;
+        }
+        if (field == 'bundledproducts') {
+            var bundledProductIds = null;
+            if (product.bundle && !empty(product.bundledProducts)) {
+                bundledProductIds = product.bundledProducts.toArray().map(function (b) { return b.ID });
+            }
+            return !empty(bundledProductIds) ? JSON.stringify(bundledProductIds) : '';
+        }
+
+        if(field == 'isdefaultvariant') {
+            var result = true;
+            if(product.isVariant()) {
+                var defaultVariant = product.variationModel.getDefaultVariant();
+                var defaultVariantID = defaultVariant ? defaultVariant.getID() : null;
+
+                if(!defaultVariant || !defaultVariant.online) {
+                    var variantsArr = product.variationModel.getVariants().toArray();
+                    variantsArr = variantsArr.filter(function(variant) {
+                        return variant.online;
+                    });
+                    var firstVariant = variantsArr.length > 0 && variantsArr[0]; //get the first variant
+                    result = firstVariant.ID === product.ID;
+                } else {
+                    result = defaultVariantID === product.ID;
+                }
+            }
+            return result;
+        }
+
+	    if(field == 'price' || field == 'pricevalue'){
+            /* Note: price is being tracked in the tracker file to look for any changes.
+            * please maintain the format as - [Number][Whitespace][Currency]
+            */
+            if(empty(product.priceModel.price)) {
+                return '';
+            }
+            var price = product.priceModel.price.getValue() + ' ' + product.priceModel.price.getCurrencyCode();
+            if(!empty(type)) { //type contains the custom pricebook id
+                var priceBookPrice = product.priceModel.getPriceBookPrice(type);
+                return priceBookPrice.available ? priceBookPrice.decimalValue + ' ' + priceBookPrice.currencyCode : price;
+            }
+
+            if(format == 'promotionpricing') {
+                var lowestPrice = ProductFieldMapper.getLowestPromoPrice(product);
+                return lowestPrice.available ? lowestPrice.decimalValue + ' ' + lowestPrice.currencyCode : price;
+            }
+
+	        return price;
+        }
+        if(field == 'pricegoogle'){
+            var salesAndList = ProductFieldMapper.getGooglePrice(product);
+            var price = salesAndList.list.value ? salesAndList.list.value + ' ' + salesAndList.list.currency : '';
+
+            if (format == 'promotionpricing') {
+                var lowestPrice = !empty(salesAndList.sales) && salesAndList.sales.value ? salesAndList.sales.value + ' ' + salesAndList.sales.currency : price;
+                return lowestPrice;
+            }
+            return price;
+        }
+        if(field == 'category'){
+            if (product.primaryCategory && product.primaryCategory.displayName) {
+                return product.primaryCategory.displayName;
+            }
+            if (optionalContainer && optionalContainer.primaryCategory && optionalContainer.primaryCategory.displayName) {
+                return optionalContainer.primaryCategory.displayName;
+            }
+            if (!empty(optionalContainer.categoryAssignments) && optionalContainer.categoryAssignments[0].category) {
+                return optionalContainer.categoryAssignments[0].category.displayName;
+            }
+            return '';
+        }
+        if(field == 'categoryid'){
+            var pc = optionalContainer.primaryCategory;
+            if (empty(pc) && !empty(optionalContainer.categoryAssignments)) {
+                pc = optionalContainer.categoryAssignments[0].category;
+            }
+            if(pc!=null){
+                return pc.ID;
+            }
+            return "";
+        }
+        if(field == 'categoryurl'){
+            var pc = optionalContainer.primaryCategory;
+            if (empty(pc) && !empty(optionalContainer.categoryAssignments)) {
+                pc = optionalContainer.categoryAssignments[0].category;
+            }
+            if(pc!=null){
+                var categoryUrl = URLUtils.https('Search-Show', 'cgid', pc.getID());
+                if (!empty(this.currentFeedHost)) {
+                    categoryUrl = categoryUrl.host(this.currentFeedHost);
+                }
+                return pc.custom && 'alternativeUrl' in pc.custom && pc.custom.alternativeUrl
+                    ? pc.custom.alternativeUrl
+                    : categoryUrl;
+            }
+            return "";
+        }
+        if(field == 'categorypath'){
+            var c = optionalContainer.primaryCategory || (optionalContainer.categoryAssignments.length > 0 && optionalContainer.categoryAssignments[0].category);
+            if(c==null){
+                return "";
+            }
+            if(!sep) {
+                sep = '>';
+            }
+            let pathStr : String = c.displayName;
+            while (!empty(c.parent) && !c.parent.root) {
+                pathStr = c.parent.displayName + sep + pathStr;
+                c = c.parent;
+            }
+            return pathStr;
+        }
+        if(field == 'metacategoriespath' && !empty(this.currentFeedCatalogs)) {
+            if (!empty(optionalContainer.allCategories)) {
+                var categoryMap = {};
+                var currentFeedCatalogs = this.currentFeedCatalogs;
+
+                for (var idxCategory = 0; idxCategory < optionalContainer.allCategories.length; idxCategory++) {
+                    var category = optionalContainer.allCategories[idxCategory];
+                    var categoryPathArr = [ category.ID ];
+
+                    while (!empty(category.parent) && !category.parent.root) {
+                        category = category.parent;
+                        categoryPathArr.push(category.ID);
+                    }
+
+                    if (category.parent && category.parent.root) {
+                        var idxCatalog = currentFeedCatalogs.map(function (ctg) { return ctg.rootUUID; }).indexOf(category.parent.UUID);
+                        if (idxCatalog > -1) {
+                            var catalog = currentFeedCatalogs[idxCatalog];
+                            if (empty(categoryMap[catalog.catalogID])) {
+                                categoryMap[catalog.catalogID] = [];
+                            }
+
+                            categoryMap[catalog.catalogID].push(categoryPathArr.reverse());
+                        }
+                    }
+                }
+                
+                return JSON.stringify(categoryMap);
+            } else {
+                return '{}';
+            }
+        }
+        if(field == 'categoriespath'){
+            sep = sep || ',';
+            sep2 = sep2 || '>';
+            let productFieldHelper = require('*/cartridge/scripts/export/ProductFieldHelper');
+            let categoriesAttriebute = productFieldHelper.getCategoriesAttribute(optionalContainer, CATEGORY_ATTRIBUTE.NAME, sep2)
+            return categoriesAttriebute.join(sep);
+        }
+        if(field == "shippingmethod"){
+            let shippingMethod : dw.order.ShippingMethod = dw.order.ShippingMgr.getDefaultShippingMethod();
+            return shippingMethod.displayName;
+        }
+        if(field == "shippingprice" || field == "shippingpricevalue") {
+            // TODO: need to make the price[value] helpers reuse formatter function
+            var shippingMethod : dw.order.ShippingMethod = dw.order.ShippingMgr.getDefaultShippingMethod();
+            if (!empty(shippingMethod)) {
+                var productPrice = product.priceModel.price;
+                if ((empty(productPrice) || !productPrice.available) && !empty(optionalContainer)) {
+                    productPrice = optionalContainer.priceModel.price;
+                }
+                var shippingCost : dw.value.Money = dw.order.ShippingMgr.getShippingCost(shippingMethod, productPrice);
+                if(empty(shippingCost) || (!shippingCost.available)){
+                    return "";
+                }
+                if(field == 'shippingprice'){
+                    return dw.util.StringUtils.formatMoney(shippingCost);
+                }
+                if (!format){
+                    format = '#.00';
+                }
+                return dw.util.StringUtils.formatNumber(shippingCost.value, format, 'en_US');
+            }
+        }
+        if(field == 'currencycode'){
+            return dw.system.Site.current.defaultCurrency;
+        }
+        if(field == 'locale'){
+            return this.currentFeedLocale || dw.system.Site.current.defaultLocale;
+        }
+        if(field == 'productdeeplink') {
+            return 'https://' + dw.system.System.getInstanceHostname() + '/on/demandware.store/Sites-Site/default/BMCustomFeeds-ProductDeeplink?pid=' + product.ID;
+        }
+        if(field == 'size' || field == 'sizedisplayvalue') {
+            if (!empty(optionalContainer) && product.ID === optionalContainer.ID) {
+                return '';
+            }
+            var returnDisplayValue = field == 'sizedisplayvalue';
+
+            var varModel = product.getVariationModel();
+            var varAttribute = varModel.getProductVariationAttribute(VARIATION_ATTRIBUTES.SIZE);
+            var varSelectedValue = varModel.getSelectedValue(varAttribute);
+
+            if (varSelectedValue) {
+                if (returnDisplayValue) {
+                    return varModel.getSelectedValue(varAttribute).getDisplayValue();
+                } else {
+                    return varModel.getSelectedValue(varAttribute).getValue();
+                }
+            }
+
+            if (returnDisplayValue) {
+                var sizeDisplayValue = ProductFieldMapper.getDisplayValue(product , VARIATION_ATTRIBUTES.SIZE);
+                return !sizeDisplayValue && Object.hasOwnProperty.call(product.custom, VARIATION_ATTRIBUTES.SIZE) ? product.custom[VARIATION_ATTRIBUTES.SIZE] : '';
+            }
+
+            return '';
+        }
+
+        if (field == 'sizeavailable') {
+            var variants = optionalContainer.getVariants();
+            var sizes = new ArrayList();
+            sep = sep || ',';
+
+            for (let i = 0; i < variants.length; i++) {
+                var variant = variants[i];
+                var varModel = variant.getVariationModel();
+                var varAttribute = varModel.getProductVariationAttribute(VARIATION_ATTRIBUTES.SIZE);
+                var varSelectedValue = varModel.getSelectedValue(varAttribute);
+
+                if (varSelectedValue) {
+                    var value = varModel.getSelectedValue(varAttribute).getValue();
+                    if (!sizes.contains(value)) {
+                        sizes.add(value);
+                    }
+                }
+            }
+
+            return sizes.join(sep);
+        }
+
+        if(field == 'variationjsondata') {
+            var variationData = {};
+            if(product.isVariant()) {
+                var varModal = product.getVariationModel();
+                var variationValue;
+                if(varModal) {
+                    var varAttributes = varModal.getProductVariationAttributes();
+                    for each(var attr in varAttributes) {
+                        variationValue = varModal.getSelectedValue(attr);
+                        if(!empty(variationValue)) {
+                            variationData[attr.displayName] = variationValue.displayValue;
+                        }
+                    }
+                }
+            }
+            //Escapes double-quotes in 'variationData' JSON string by replacing '\"' with '\\"'
+            return JSON.stringify(variationData).replace(/\\"/g, '\\\\"');
+        }
+
+        if(field == 'stock') {
+            var availabilityModel = optionalContainer && optionalContainer.availabilityModel;
+            return availabilityModel ? availabilityModel.availability : 0;
+        }
+        if(field == 'isavailable') {
+            var availabilityModel = optionalContainer && optionalContainer.availabilityModel;
+            return availabilityModel && availabilityModel.orderable;
+        }
+        if(field == 'stockavailability') {
+            let availabilityModel = optionalContainer && optionalContainer.availabilityModel;
+            let inStock = availabilityModel && availabilityModel.inStock;
+            return inStock ? 'in stock' : 'out of stock';
+        }
+        if(field == 'availability') {
+            if (!empty(socialCategory) && socialCategory == 'SocialChannelGoogle') {
+                return GOOGLE_AVAILABILITY_ENUM[product.getAvailabilityModel().getAvailabilityStatus()];
+            } else {
+                return AVAILABILITY_ENUM[product.getAvailabilityModel().getAvailabilityStatus()];
+            }
+        }
+        if(field == 'availabilitydate') {
+            let inventoryRecord = product.getAvailabilityModel().getInventoryRecord();
+
+            if (inventoryRecord.inStockDate !== null && (GOOGLE_AVAILABILITY_ENUM[product.getAvailabilityModel().getAvailabilityStatus()] === 'preorder' || AVAILABILITY_ENUM[product.getAvailabilityModel().getAvailabilityStatus()] === 'preorder')) {
+                var calendar = new dw.util.Calendar(inventoryRecord.inStockDate);
+                let timezone = dw.system.Site.current.timezone;
+                calendar.setTimeZone(timezone);
+                return dw.util.StringUtils.formatCalendar(calendar, 'yyyy-MM-dd HH:mmZ').replace(' ','T');
+            } 
+
+            return '';
+        }
+        if(field == 'ats') {
+            var inventoryRecord = product.getAvailabilityModel().getInventoryRecord();
+            return !empty(inventoryRecord) ? inventoryRecord.getATS().value : 0;
+        }
+        if(field == 'googleproductcategories'){
+            return googleShoppingCategories;
+        }
+        if(field == 'onlineandinstock') {
+            let inventoryRecord = product.getAvailabilityModel().getInventoryRecord();
+            let ats = 0;
+            let isPerpetual = false;
+            if (inventoryRecord) {
+                ats = inventoryRecord.getATS().value;
+                isPerpetual = inventoryRecord.isPerpetual();
+            }
+            if (product.isOnline() && (ats > 0 || isPerpetual)) return "IN STOCK";
+	        else return "NOT AVAILABLE"
+        }
+        if (field == 'producttitle') {
+            let title= !empty(product.pageTitle) ? product.pageTitle : product.name;
+            return title;
+        }
+        if (field == 'productdescription') {
+            let description = !empty(product.shortDescription) ? product.shortDescription.toString() : !empty(product.longDescription) ? product.longDescription.toString() : '';
+
+            if (empty(description)) {
+                description = !empty(product.name) ? product.name.toString() : product.ID.toString(); 
+            }
+
+            if (!empty(description)) {
+                description = description.replace( /(<([^>]+)>)/ig, '');
+            }
+            return description;
+        }
+        if (field == 'descriptiondetails') {
+            let shortDescription = product.shortDescription ? product.shortDescription.getMarkup() : '';
+            let longDescription = product.longDescription ? product.longDescription.getMarkup() : '';
+            let description = [shortDescription, longDescription].filter(Boolean).join(sep || ' ');
+            if (format === 'plaintext') {
+                // attempt to remove html tags
+                description = description.replace( /(<([^>]+)>)/ig, '');
+            }
+            return description;
+        }
+        if (field == 'listpricevalue' || field == 'salepricevalue') {
+            var priceBookId;
+            if (!empty(type)) { // type contains the custom pricebook id
+                priceBookId = type;
+            } else {
+                var currencyCode = product.priceModel
+                    && product.priceModel.price
+                    && product.priceModel.price.currencyCode
+                    ? product.priceModel.price.currencyCode.toLowerCase()
+                    : dw.system.Site.current.defaultCurrency.toLowerCase();
+                priceBookId = currencyCode + (field === 'salepricevalue' ? '-m-sale-prices' : '-m-list-prices');
+            }
+
+            var priceBookPrice = product.priceModel.getPriceBookPrice(priceBookId);
+            return priceBookPrice.available ? priceBookPrice.decimalValue + ' ' + priceBookPrice.currencyCode : '';
+        }
+        if (field === 'productlivedate') {
+            if (product.online) {
+                var currentDate = new Date();
+                var creationDate = product.availabilityModel && product.availabilityModel.inventoryRecord ? product.availabilityModel.inventoryRecord.creationDate : null;
+                var onlineFrom = product.onlineFrom;
+                if (onlineFrom < currentDate) {
+                    if (!empty(creationDate) && creationDate > onlineFrom) {
+                        return creationDate;
+                    } else {
+                        return onlineFrom;
+                    }
+                }
+            } else {
+                return new Date(0);
+            }
+        }
+        if (field == 'customdata'){
+            return ProductFieldMapper.getCustomData(attributes.split(','), product);
+        }
+        if (field.indexOf('all') == 0){
+            var allCustomAttributesValues = ProductFieldMapper.getAllCustomAttributesValues(socialCategory, product);
+            return allCustomAttributesValues;
+        }
+        if(field == 'googlecartpermalink' && !product.master){
+            var qty = product.minOrderQuantity && !empty(product.minOrderQuantity) ? product.minOrderQuantity : 1; 
+            var googleCartPermalink = ProductFieldMapper.createGoogleCartPermalink([{ pid: product.ID, qty: qty }], !empty(attributes) ? attributes.split(',') : []);
+            return googleCartPermalink;
+        }
+        // now handle generic attributes
+        var result = '';
+        result += ProductFieldMapper.getValueInContainer(field.split('.'), product);
+
+        // handle custom attributes
+        if (customAttrDetails.isCustomField) {
+            return customAttrDetails.fx(customAttrDetails.attrName, product, { "format": format, "postProcess": postProcess, "sep": sep });
+        }
+
+        var activeDataFieldArray = systemAttributeField.split('.');
+        if (activeDataFieldArray[0].toLowerCase() === 'activedata') {
+            return product.activeData[activeDataFieldArray[1]];
+        }
+
+        // handle system attributes
+        if(ProductFieldMapper.SYSTEM_ATTRIBUTES.indexOf(systemAttributeField) > -1){
+            let productField = product[systemAttributeField];
+            if (postProcess) {
+                productField = postProcess(productField);
+            }
+            result = productField;
+        }
+        if(format && result instanceof Date){
+            result = dw.util.StringUtils.formatCalendar(new dw.util.Calendar(result), format);
+        }
+        return result;
+    }
+    catch(e){
+        logger.error('Error occurred while mapping field {0} for product {1} \n {2}',field, product.ID, e.toString() + ' in ' + e.fileName + ':' + e.lineNumber);
+    }
+    return null;
+};
+
+//TODO: multi pricebooks using product.priceModel.getPriceBookPrice(priceBook)
+//mayeb with function (product, field, locale, custom)
+ProductFieldMapper.getPrice = function (product) {
+
+    if (!empty(product)) {
+        var productPrice = dw.util.StringUtils.formatMoney(product.priceModel.price);
+        if (productPrice) {
+            return productPrice;
+        }
+    }
+
+    return null;
+}
+
+//TO-DO multi-currency
+ProductFieldMapper.getFormatedPrice = function (price, format) {
+    let priceValue = 0;
+    const priceFormat = format ? format : '#.00';
+    if (price && price.value) {
+        priceValue = price.value;
+    }
+    return dw.util.StringUtils.formatNumber(priceValue, priceFormat, this.currentFeedLocale);
+}
+
+/**
+ * Returns the same price object (list/sale) used on storefront
+ */
+ProductFieldMapper.getGooglePrice = function (product) {
+    var productHelper = require('*/cartridge/scripts/helpers/productHelpers');
+    var priceFactory = require('*/cartridge/scripts/factories/price');
+
+    var options = productHelper.getConfig(product, { pid: product.ID });
+    var price = priceFactory.getPrice(product, null, false, options.promotions, options.optionModel);
+    if((empty(price.list) || empty(price.list.value)) && price.sales){
+        price.list = price.sales;
+        price.sales = null;
+    }
+
+    return price;
+}
+
+/**
+ * Parses a given field definition as string and return a field object
+ */
+ProductFieldMapper.parseField = function(attributeAsStr : String){
+    var typeDef = dw.object.SystemObjectMgr.describe('Product');
+    var field = attributeAsStr.split(/(?:\{\{| |\}\})/g).filter(function(t){ return !empty(t)})[0];
+    if(!empty(field) && field.indexOf('var:') == 0){
+        field = field.substring(4).replace(':', '.');
+    }
+    var customAttrDetails = getCustomFieldDetails(field);
+    var fieldAsJson = {}
+    if(attributeAsStr.indexOf('format="') > -1){
+        fieldAsJson.format = attributeAsStr.split('format="')[1].split('"')[0];
+    }
+    if(attributeAsStr.indexOf('sep="') > -1){
+        fieldAsJson.sep = attributeAsStr.split('sep="')[1].split('"')[0];
+    }
+    if(attributeAsStr.indexOf('type="') > -1){
+        fieldAsJson.type = attributeAsStr.split('type="')[1].split('"')[0];
+    }
+    if (attributeAsStr.indexOf('sep2="') > -1) {
+        fieldAsJson.sep2 = attributeAsStr.split('sep2="')[1].split('"')[0];
+    }
+    if(attributeAsStr.indexOf('postProcess="') > -1){
+        var postString ='post' + attributeAsStr.split('postProcess="')[1].split('"')[0];
+        if (typeof ProductFieldMapper[postString] === 'function') {
+            fieldAsJson.postProcess = ProductFieldMapper[postString];
+        }
+    }
+    if(attributeAsStr.indexOf('attributes="') > -1){
+        fieldAsJson.attributes = attributeAsStr.split('attributes="')[1].split('"')[0];
+    }
+    if (customAttrDetails.isCustomField) {
+        if (typeDef.getCustomAttributeDefinition(customAttrDetails.attrName) != null) {
+            fieldAsJson.attribute = field;
+        }
+    } else {
+        fieldAsJson.attribute = field;
+    }
+    logger.debug('Parsed mapping for field {0} to field {1}', attributeAsStr, JSON.stringify(fieldAsJson));
+    return fieldAsJson;
+}
+
+/**
+ * Convert a given array field into the concatenated string
+ */
+ProductFieldMapper.getValueInContainer = function(args : Array, container){
+    var ret,
+        len = args.length;
+    for(var i=0; i < len; i++) {
+        if(!container){
+            break;
+        }
+
+        if(args[i] in container) {
+            if(i == len-1) {
+                ret = container[args[i]];
+                break;
+            } else {
+                container = container[args[i]];
+            }
+        } else {
+            break;
+        }
+    }
+
+    if(empty(ret) || ret == "undefined")
+        ret = "";
+
+    return ret;
+};
+
+/**
+ * Parses not product related fields
+ */
+ProductFieldMapper.parseAdditionData = function(a : String){
+    var parts : Array = a.split(/(?:\{\{| |\}\})/g);
+    var variable = parts[1];
+    if(variable == "timestamp"){
+        var format = 'yyyyMMddhhmmss';
+        parts.forEach(function(part : String){
+            if(part.indexOf('format=') == 0){
+                format = part.substring(0,part.length-1).substring(8);
+            }
+        });
+        return dw.util.StringUtils.formatCalendar(dw.system.Site.getCalendar(),format);
+    }
+    if(variable == "countrycode"){
+        return dw.util.Locale.getLocale(dw.system.Site.getCurrent().defaultLocale).country;
+    }
+    if(variable == "siteName"){
+        return dw.system.Site.getCurrent().getName();
+    }
+    if(variable == "locale"){
+        return this.currentFeedLocale;
+    }
+    return "";
+}
+
+/**
+ * Sets current feed catalogs
+ */
+ProductFieldMapper.setCurrentCatalogs = function (catalogs) {
+    this.currentFeedCatalogs = catalogs;
+}
+
+/**
+ * Sets current feed host
+ */
+ProductFieldMapper.setCurrentHost = function (host) {
+    this.currentFeedHost = host;
+}
+
+/**
+ * Sets current feed locale
+ */
+ProductFieldMapper.setCurrentLocale = function (locale) {
+    this.currentFeedLocale = locale;
+}
+
+ProductFieldMapper.postEscapeComma = function (field) {
+    let processedValue = field;
+    if (processedValue) {
+        return processedValue.toString().replace(',', '\\,');
+    }
+    return processedValue;
+}
+
+ProductFieldMapper.calculatePromoPrice = function(product) {
+    const PromotionMgr = require('dw/campaign/PromotionMgr');
+    let promoPrice = 'N/A';
+    const PROMOTION_CLASS_PRODUCT = require('dw/campaign/Promotion').PROMOTION_CLASS_PRODUCT;
+    let promotions = PromotionMgr.getActivePromotions().getProductPromotions(product);
+    let promoPriceArray = [];
+    if (promotions && promotions.length > 0) {
+        let promotionsItr = promotions.iterator();
+        while (promotionsItr.hasNext()) {
+            let promo = promotionsItr.next();
+            if (promo.getPromotionClass() != null && promo.getPromotionClass().equals(PROMOTION_CLASS_PRODUCT) &&
+                (promo.isBasedOnCustomerGroups() && !promo.basedOnCoupons && !promo.basedOnSourceCodes)) {
+                let promoPriceObj = {};
+                let tempPrice = 0;
+                if (product.optionProduct) {
+                    tempPrice = promo.getPromotionalPrice(product, product.getOptionModel());
+                } else {
+                    tempPrice = promo.getPromotionalPrice(product);
+                }
+                promoPriceObj[promo.ID] = tempPrice > 0 ? tempPrice : 'N/A';
+                promoPriceArray.push(promoPriceObj);
+            }
+        }
+        return promoPriceArray.length > 0 ? JSON.stringify(promoPriceArray) : promoPrice;
+    }
+    return promoPrice;
+}
+
+ProductFieldMapper.getDisplayValue = function(product, selectedAttr) {
+    let optionalContainer = (product.isMaster()) ? product : product.variationModel.master;
+
+    if (empty(optionalContainer)) {
+        return null;
+    }
+
+    let varModel : dw.catalog.ProductVariationModel = optionalContainer.getVariationModel();
+    let varAttribute : dw.catalog.ProductVariationAttribute = varModel.getProductVariationAttribute(selectedAttr);
+    if (varAttribute==null) return '';
+    let varAttributeValues : dw.catalog.ProductVariationAttributeValue = varModel.getAllValues(varAttribute);
+    let displayValue, attrCode = null;
+
+    if (selectedAttr == VARIATION_ATTRIBUTES.SIZE) {
+        attrCode = Object.hasOwnProperty.call(product.custom, VARIATION_ATTRIBUTES.SIZE) ? product.custom[VARIATION_ATTRIBUTES.SIZE] : null;
+    } else {
+        attrCode = Object.hasOwnProperty.call(product.custom, VARIATION_ATTRIBUTES.COLOR) ? product.custom[VARIATION_ATTRIBUTES.COLOR] : null;
+    }
+    if (varAttributeValues) {
+        for each (var varAttributeValue in varAttributeValues) {
+            if (attrCode == varAttributeValue.ID) {
+                displayValue = varAttributeValue.displayValue;
+                break;
+            }
+        }
+    }
+    return displayValue;
+}
+
+ProductFieldMapper.getLowestPromoPrice = function(product) {
+    const PromotionMgr = require('dw/campaign/PromotionMgr');
+    const PROMOTION_CLASS_PRODUCT = require('dw/campaign/Promotion').PROMOTION_CLASS_PRODUCT;
+    let promotions = PromotionMgr.getActivePromotions().getProductPromotions(product);
+    let lowestPrice = product.priceModel.price;
+    if (promotions && promotions.length > 0) {
+        let promotionsItr = promotions.iterator();
+        while (promotionsItr.hasNext()) {
+            let promo = promotionsItr.next();
+            if (promo.getPromotionClass() != null && promo.getPromotionClass().equals(PROMOTION_CLASS_PRODUCT) &&
+                (promo.isBasedOnCustomerGroups() && !promo.basedOnCoupons && !promo.basedOnSourceCodes)) {
+                //let promoPriceObj = {};
+                let promotionalPrice;
+                if (product.optionProduct) {
+                    promotionalPrice = promo.getPromotionalPrice(product, product.getOptionModel());
+                } else {
+                    promotionalPrice = promo.getPromotionalPrice(product);
+                }
+                let isLowerPrice = promotionalPrice.available && promotionalPrice.compareTo(lowestPrice) < 0;
+                if(isLowerPrice) {
+                    lowestPrice = promotionalPrice;
+                }
+            }
+        }
+    }
+    return lowestPrice;
+}
+
+ProductFieldMapper.getCustomData = function (args : Array, product) {
+    var len = args.length;
+    var cdata = {};
+    for(var i=0; i < len; i++) {
+        var attr = args[i].trim();
+        if(attr == '' || attr == null) {
+            break;
+        }
+        if(attr.indexOf('c_') == 0){
+            var cname = attr.substr(2);
+            if(cname in product.custom){
+                cdata[cname.charAt(0).toUpperCase() + cname.slice(1)] = ProductFieldMapper.getSupportedDataTypeValue(product.custom[cname]);
+            }
+        } else {
+            cdata[attr.charAt(0).toUpperCase() + attr.slice(1)] = ProductFieldMapper.getSupportedDataTypeValue(product[attr]);
+        }
+    }
+    return JSON.stringify(cdata).replace(/\\"/g, '\\\\"');
+}
+
+ProductFieldMapper.getSupportedDataTypeValue = function (data) {
+    if (data instanceof String ||  data instanceof Number
+    || data instanceof Boolean || data instanceof Date) {
+        return data;
+    }
+    if (data instanceof dw.content.MarkupText) {
+        return data.markup;
+    }
+    if (data instanceof Array) {
+        return data.join(",");
+    }
+    if (data instanceof dw.value.EnumValue) {
+        return data.displayValue;
+    }
+    if (data instanceof dw.content.MediaFile) {
+        return data.absURL.toString();
+    }
+    return data;
+}
+
+ProductFieldMapper.processCustomAttribute = function (attr, product, { format, postProcess, sep }) {
+    var result = '';
+    if (Object.hasOwnProperty.call(product.custom, attr)) {
+        result = product.custom[attr];
+
+        if (result instanceof Array) {
+            sep = sep || '|';
+            // We need to post process the values before joining
+            if (postProcess) {
+                result = result.map(function (element) {
+                    return postProcess(element);
+                });
+            }
+            result = result.join(sep);
+        } else if (postProcess) {
+            result = postProcess(result);
+        }
+    }
+    return result;
+}
+
+ProductFieldMapper.getCustomAttributes = function (attr, product) {
+    if (Object.hasOwnProperty.call(product.custom, attr)) {
+        return ProductFieldMapper.getSupportedDataTypeValue(product.custom[attr]);
+    }
+    return ''
+}
+
+ProductFieldMapper.getAllCustomAttributesValues = function (socialCategory, product) {
+    var describe = product.describe();
+    var attributeDefinitions = describe.getAttributeDefinitions().toArray();
+    var filteredCustomAttributesDefinitions = attributeDefinitions.filter(function(data) { return data.system == false; } );
+    var cAttributeValues = [];
+
+    for(var i=0; i < filteredCustomAttributesDefinitions.length; i++) {
+        var attr = filteredCustomAttributesDefinitions[i];
+        var value;
+        if (product.custom[attr.ID] === null || product.custom[attr.ID] === undefined) {
+            cAttributeValues.push('');
+        } else {
+            if (!empty(socialCategory) && socialCategory == 'SocialChannelInstagram') {
+                var displayValue = ProductFieldMapper.getDisplayValue(product, attr.ID);
+                value = !empty(displayValue) ? displayValue : ProductFieldMapper.getSupportedDataTypeValue(product.custom[attr.ID]);
+            } else {
+                value = ProductFieldMapper.getSupportedDataTypeValue(product.custom[attr.ID]);
+            }
+            cAttributeValues.push(value !== null && value !== undefined ? value : '');
+        }
+    }
+    return cAttributeValues;
+}
+
+ProductFieldMapper.getAllCustomAttributesDefinitions = function (product) {
+    var describe = product.describe();
+    var attributeDefinitions = describe.getAttributeDefinitions().toArray();
+    var filteredCustomAttributesDefinitions = attributeDefinitions.filter(function(data) { return data.system == false; } );
+
+    return filteredCustomAttributesDefinitions.map(function (data) {
+            return data.ID
+    });
+}
+
+ProductFieldMapper.createGoogleCartPermalink = function (pidsObj, customParams) {
+    var URLUtils = require('dw/web/URLUtils');
+    var regex = new RegExp('^([a-zA-Z0-9\\-\\_]+\\:\\d+)(?:\\,[a-zA-Z0-9\\-\\_]+\\:\\d+)*$', 'g');
+
+    var actions = [];
+
+    for (var i = 0; i < pidsObj.length; i++) {
+        var action = pidsObj[i].pid + ':' + pidsObj[i].qty;
+        if (regex.test(action)) {
+            actions.push(action);
+        }
+    }
+
+    var pipeline = 'Google-Cart/'.concat(actions.join(',')).toString();
+
+    return decodeURIComponent(URLUtils.https(pipeline, customParams).toString());
+}
+
+if( typeof(exports) !== 'undefined') {
+    module.exports = ProductFieldMapper;
+}

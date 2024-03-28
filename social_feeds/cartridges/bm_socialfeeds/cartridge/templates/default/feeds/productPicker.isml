@@ -1,0 +1,26 @@
+<table>
+    <td>
+        <label class="slds-form-element__label" for="test-gen-feed-preview-obj-id">Preview object ID</label>
+    </td>
+    <td>
+        <input type="text" id="feedproductid" placeholder="Enter an ID" class="slds-input" value="" />
+    </td>
+    <td>
+        <button class="slds-button slds-button_neutral" id="feed-product-modal-open" title="Open Product Picker">
+            <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#threedots')}"></use>
+            </svg> &nbsp;
+            Product Picker
+        </button>
+    </td>
+    <td>
+        <button class="slds-button slds-button_neutral" title="Show Preview">
+            <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#preview')}"></use>
+            </svg> &nbsp;
+            Preview
+        </button>
+    </td>
+</table>
+
+<isinclude template="feeds/productFeedModal.isml"></isinclude>

@@ -1,0 +1,625 @@
+/** @module bc_library/cartridge/scripts/customobject/ObjectHelper */
+
+var Class = require("bc_library/cartridge/scripts/object-handling/libInheritance").Class;
+
+var _global = this;
+
+/**
+ *  Object Helper, provides CRUD methods for server side persistent objects
+ *	@todo build class hierarchie CustomObjectHelper and SystemObjectHelper, which inherit from AbstractObjectHelper
+ * 	@author Danny Gehl
+ */
+var ObjectHelper = Class.extend(
+/** @lends ObjectHelper.prototype */
+{
+
+    /**
+    	 *	Creates an instance of Object Helper Class
+    	 *
+    	 *  @constructs ObjectHelper
+    	 *
+    	 *	@param {String} type 		the Type ID - either CustomObject ID or System Class name
+    	 * 	@param {boolean} system 	flags whether this is a system or custom type
+    	 *	@param {Object} config  	a transient generic config store - initialised by client app
+    	 */
+    init : function(type, system, config) {
+        this.logger = dw.system.Logger.getLogger("ObjectHelper");
+
+        if (!type) {
+            this.logger.error("Mandatory parameter type is missing, please specify!");
+        }
+        this.type = type;
+        this.system = system;
+        this.config = config;
+        this.typeDefinition = this.system ? dw.object.SystemObjectMgr.describe(type) : dw.object.CustomObjectMgr.describe(type);
+    },
+
+    /**
+      * Converts  object into transient object for serialization
+      *
+      * @returns {Object|Array} A plain Javascript object or an array of such
+      */
+    toObject : function(persistentObject) {
+        var transientObject = {};
+        var val, custom = persistentObject.custom;
+        
+        var attributeDefinitions = this.typeDefinition.getAttributeDefinitions();
+
+        for (var index in attributeDefinitions) {
+            var typeDefinition = attributeDefinitions[index];
+
+            try {
+                var attributeID = typeDefinition.ID;
+
+                if (typeDefinition.system && !(attributeID in persistentObject)) {
+                    continue;
+                }
+                // read value
+                if (typeDefinition.system) {
+                    val = persistentObject[attributeID];
+                } else {
+                    val = custom[attributeID];
+                }
+
+                if (val instanceof dw.value.EnumValue) {
+                    val = val.value;
+                }
+
+                if (val instanceof dw.content.MarkupText) {
+                    val = val.source;
+                }
+
+                if (typeDefinition.multiValueType) {
+                    var multiValueArray = [];
+
+                    for (var i in val) {
+                        multiValueArray.push(val[i]);
+                    }
+                    val = multiValueArray;
+                }
+
+                if (typeDefinition.system) {
+                    transientObject[attributeID] = val;
+                } else {
+                    transientObject[attributeID] = val;
+                }
+            } catch (e) {
+                this.logger.error("Exception occurred while accessing property {0} of type {1}: {2}", typeDefinition.ID, this.type, e);
+            }
+        }
+
+        return transientObject;
+    },
+
+    /**
+    	 *	saves writable attributes to given persistent object
+    	 *
+    	 *	@param {dw.object.ExtensibleObject} persistentObject 	to database object to write to
+    	 *	@param {Object} 					transientObject 	to altered js object transmitted from the client
+    	 */
+    applyObject : function(persistentObject, transientObject) {
+        var val, setter, custom = persistentObject.custom;
+
+        for (var index in this.getObjectDefinition()) {
+            var typeDefinition = this.getObjectDefinition()[index];
+
+            try {
+                var attributeID = typeDefinition.ID;
+                // only update defined properties
+                if (typeDefinition.transientAttribute || transientObject[attributeID] === undefined) {
+                    continue;
+                }
+                // read value
+                if (typeDefinition.system) {
+                    val = transientObject[attributeID];
+                } else {
+                    // normalize empty to null
+                    if (empty(transientObject[attributeID])) {
+                        val = null;
+                    } else {
+                        val = transientObject[attributeID];
+                    }
+                }
+
+                // so far no transformations required
+                // generate setter name to allow check for existence
+                setter = 'set' + attributeID.substring(0, 1).toUpperCase() + attributeID.substring(1);
+
+                if (typeDefinition.system) {
+                    if (setter in persistentObject) {
+                        persistentObject[attributeID] = val;
+                    } else {
+                        this.logger.warn("Cannot store attribute, no such setter defined {0}", setter);
+                    }
+                } else {
+                    custom[attributeID] = val;
+                }
+            } catch (e) {
+                this.logger.error("Exception occurred while accessing property {0} of type {1}: {2}", typeDefinition.ID, this.type, e);
+            }
+        }
+
+        return transientObject;
+    },
+
+    /**
+    	 *	provides transient object list, to be consumed directly by ext js
+    	 */
+    getResultList : function(parameterMap) {
+        var sorting = null;
+
+        if (parameterMap.sort.submitted) {
+            sorting = JSON.parse(parameterMap.sort.stringValue);
+        }
+
+        var filter = {}, i = 0;
+
+        while (true) {
+            var filterName = "filter[" + i + "][field]";
+            var filterValue = "filter[" + i + "][data][value]";
+
+            if (parameterMap[filterName].submitted && parameterMap[filterValue].submitted) {
+                filter[parameterMap[filterName].stringValue] = parameterMap[filterValue].stringValue;
+            } else {
+                break;
+            }
+            i++;
+        }
+
+        var objects = this.getAllObjectsAsPlain(parameterMap.start.intValue, parameterMap.limit.intValue, parameterMap.node.stringValue, sorting, filter);
+        var meta = this.generateMetaData();
+        var resultObject = {
+            customObjects : objects,
+            total         : objects.totalCount
+        };
+
+        if (meta) {
+            resultObject.metaData = meta;
+        }
+
+        return resultObject;
+    },
+
+    /**
+    	 * 	retrieves a page worth of objects
+    	 */
+    getAllObjectsAsPlain : function(start, limit, parentId, sorting, filter) {
+        var MAX_COUNT = limit || 25;
+        var count = 0;
+
+        var seekableIterator;
+        var elementCount = 0;
+
+        if (this.system) {
+            if (this.type == 'Product') {
+            	
+                 try {
+                    var searchModel = new dw.catalog.ProductSearchModel();
+                 } catch (e) {
+                    this.logger.error("NullPointerException has been thrown while constructing dw.catalog.ProductSearchModel. Did you select a site in Business Manager?", e);
+                    return [];
+                 }
+
+                searchModel.setCategoryID("root");
+
+                for (var i in filter) {
+                    var filterEntry = filer[i];
+
+                    searchModel.addRefinementValues(filterEntry.property, filterEntry.value);
+                }
+                //  refine by masters, products and variants
+                searchModel.addRefinementValues("product-type-code", "0|1|4");
+                searchModel.search();
+                seekableIterator = searchModel.products;
+
+                elementCount = searchModel.count;
+            } else if (this.type == 'Category') {
+                seekableIterator = dw.catalog.CatalogMgr.getCategory(parentId).subCategories.iterator();
+            } else {
+                // add query support here
+                seekableIterator = dw.object.SystemObjectMgr.getAllSystemObjects(this.type);
+            }
+        } else {
+            if (empty(sorting)) {
+                seekableIterator = dw.object.CustomObjectMgr.getAllCustomObjects(this.type);
+            } else {
+                sorting = sorting[0];
+                seekableIterator = dw.object.CustomObjectMgr.queryCustomObjects(this.type, "", "custom." + sorting.property + " " + sorting.direction.toLowerCase());
+            }
+        }
+
+        if (elementCount === 0 && 'count' in seekableIterator) {
+            elementCount = seekableIterator.count;
+        }
+
+        var pagingModel = new dw.web.PagingModel(seekableIterator, elementCount);
+
+        pagingModel.setPageSize(MAX_COUNT);
+
+        if (start) {
+            pagingModel.setStart(start);
+        }
+
+        var all = [];
+        var pageElements = pagingModel.getPageElements();
+
+        while (pageElements.hasNext()) {
+            var object = this.toObject(pageElements.next());
+
+            if (object instanceof Array) {
+                all.push.apply(all, object);
+            } else {
+                all.push(object);
+            }
+
+        }
+
+        if ('close' in seekableIterator) {
+            seekableIterator.close();
+        }
+        all.totalCount = elementCount;
+
+        return all;
+    },
+    /**
+    	 *	determines correct persistent object to save data coming from the client and proxy to storage function
+    	 *
+    	 *	@param {Object} transientObject 	the retrieved object
+    	 */
+    saveObject : function(transientObject) {
+        if (typeof (transientObject) === 'string') {
+            transientObject = JSON.parse(transientObject);
+        }
+
+        if (Object.prototype.toString.call(transientObject) === '[object Array]') {
+            for (var i in transientObject) {
+                this.saveObject(transientObject[i]);
+            }
+
+            this.logger.info("Successfully saved {0} custom objects.", transientObject.length);
+
+            return true;
+        }
+        var idField	= this.getIdField(transientObject);
+
+        if (this.system) {
+            var persistentObject = null;
+
+            switch (this.type){
+                case "Category":
+                    persistentObject = CatalogMgr.getCategory(transientObject.ID);
+                    break;
+                default:
+                    try {
+                        // generic persistent object lookup
+                        // can translate to: ProductMgr.getProduct('xbox')
+                        //                   =======       =======
+                        persistentObject = _global[this.type + "Mgr"]['get' + this.type](transientObject.ID);
+                    } catch (e) {
+                        this.logger.error("System type {0} not supported for saving.", this.type, transientObject[idField || 'id']);
+                    }
+            }
+
+            if (persistentObject !== null) {
+                this.applyObject(persistentObject, transientObject);
+                this.logger.info("Successfully saved custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+
+                return true;
+            } else {
+                this.logger.error("Could not find custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+            }
+
+        } else {
+            var co  = null;
+
+            if (!empty(transientObject.UUID)) {
+                co = dw.object.CustomObjectMgr.queryCustomObject(this.type, 'UUID = {0}', transientObject.UUID);
+            } else {
+                co = dw.object.CustomObjectMgr.getCustomObject(this.type, transientObject[idField || 'id']);
+            }
+
+            if (co === null) {
+                co = dw.object.CustomObjectMgr.createCustomObject(this.type, transientObject[idField || 'id']);
+            }
+
+            if (co !== null) {
+                this.applyObject(co, transientObject);
+                this.logger.info("Successfully saved custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+
+                return true;
+            } else {
+                this.logger.error("Could not find custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+            }
+        }
+
+        return false;
+    },
+
+    /**
+    	 *	creates a new object in the database, based on data coming from client
+    	 *
+    	 *	@param {Object} transientObject object to be created
+    	 */
+    createObject : function(transientObject) {
+        if (typeof (transientObject) === 'string') {
+            transientObject = JSON.parse(transientObject);
+        }
+
+        if (this.system) {
+            // not supported
+        } else {
+            var idField	= this.getIdField(transientObject);
+
+            try {
+                var co = dw.object.CustomObjectMgr.createCustomObject(this.type, transientObject[idField || 'id']);
+
+                this.logger.info("Successfully created custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+
+                return this.saveObject(transientObject, idField || 'id');
+            } catch (e) {
+                this.logger.error("Could not create custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+            }
+        }
+
+        return false;
+    },
+
+    /**
+     * removes object from database
+     *
+     * @param {Object} transientObject 	object to be deleted
+     */
+    deleteObject : function(transientObject) {
+
+        var idField	= this.getIdField(transientObject);
+
+        if (!empty(this.config) && !empty(this.config.keyAttribute)) {
+            idField = this.config.keyAttribute;
+        }
+
+        if (typeof (transientObject) === 'string') {
+            transientObject = JSON.parse(transientObject);
+        }
+
+        try {
+            if (this.system) {
+            // not supported
+            } else {
+                var co = null;
+
+                if (!empty(transientObject.UUID)) {
+                    co = dw.object.CustomObjectMgr.queryCustomObject(this.type, 'UUID = {0}', transientObject.UUID);
+                } else {
+                    co = dw.object.CustomObjectMgr.getCustomObject(this.type, transientObject[idField || 'id']);
+                }
+                dw.object.CustomObjectMgr.remove(co);
+                this.logger.info("Successfully deleted custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+
+                return true;
+            }
+        } catch (e) {
+            this.logger.error("Could not delete custom object of type {0} with ID {1}.", this.type, transientObject[idField || 'id']);
+        }
+
+        return false;
+    },
+
+    /**
+    	*	gets a metadata object compatible with ext metadata defintion format
+    	*/
+    generateMetaData : function() {
+        var fullObjectDefinition = this.getObjectDefinition();
+
+        if (fullObjectDefinition) {
+            var metaDataObject = {};
+
+            metaDataObject.fields = [];
+
+            for (var attributeID in fullObjectDefinition) {
+                var attributeObject = {};
+
+                attributeObject.name = attributeID;
+                attributeObject.type = "string";
+
+                if (fullObjectDefinition[attributeID].type == "INTEGER") {
+                    attributeObject.type = "int";
+                }
+
+                if (fullObjectDefinition[attributeID].type == "DATE") {
+                    attributeObject.type = "date";
+                }
+
+                if (fullObjectDefinition[attributeID].type == "BOOLEAN") {
+                    attributeObject.type = "bool";
+                }
+
+                if (fullObjectDefinition[attributeID].type == "SET_OF_STRING") {
+                    attributeObject.type = "auto";
+                }
+
+                if (!empty(fullObjectDefinition[attributeID].selectableValues)) {
+
+                    attributeObject.selectableValues = fullObjectDefinition[attributeID].selectableValues;
+                }
+
+                metaDataObject.fields.push(attributeObject);
+            }
+            metaDataObject.fullDWDefinition = fullObjectDefinition;
+            metaDataObject.idProperty = this.getIdField();
+            metaDataObject.totalCount = metaDataObject.fields.length;
+            metaDataObject.success = true;
+            metaDataObject.root = 'customObjects';
+
+            return metaDataObject;
+        } else {
+            return null;
+        }
+    },
+
+    /**
+    	*	Retrieves arbitrary object for the custom object type, and converts it's data model in a JSON format
+    	*/
+    getObjectDefinition : function() {
+
+        var definition = {};
+        var systemDefinition = this.system ? dw.object.SystemObjectMgr.describe(this.type) : dw.object.CustomObjectMgr.describe(this.type);
+
+        if (!empty(systemDefinition) && !empty(systemDefinition.getAttributeDefinitions())) {
+            for (var i in systemDefinition.getAttributeDefinitions()) {
+                var systemAttributeDefinition = systemDefinition.getAttributeDefinitions()[i];
+                var attributeDefinition = {};
+                var groups = [];
+
+                for (var j in systemAttributeDefinition.getAttributeGroups()) {
+                    var group = systemAttributeDefinition.getAttributeGroups()[j];
+
+                    groups.push({"id": group.getID(), "displayName": group.getDisplayName()});
+                }
+                attributeDefinition.groups = groups;
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_STRING) {
+                    attributeDefinition.type = "STRING";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_INT) {
+                    attributeDefinition.type = "INTEGER";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_NUMBER) {
+                    attributeDefinition.type = "NUMBER";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() ==	dw.object.ObjectAttributeDefinition.VALUE_TYPE_TEXT) {
+                    attributeDefinition.type = "TEXT";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_HTML) {
+                    attributeDefinition.type = "HTML";
+                    attributeDefinition.readonly = true;
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() ==  dw.object.ObjectAttributeDefinition.VALUE_TYPE_DATE) {
+                    attributeDefinition.type = "DATE";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_DATETIME) {
+                    attributeDefinition.type = "DATETIME";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_IMAGE) {
+                    attributeDefinition.type = "IMAGE";
+                    attributeDefinition.readonly = true;
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_EMAIL) {
+                    attributeDefinition.type = "EMAIL";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_PASSWORD) {
+                    attributeDefinition.type = "PASSWORD";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_BOOLEAN) {
+                    attributeDefinition.type = "BOOLEAN";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_MONEY) {
+                    attributeDefinition.type = "MONEY";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_QUANTITY) {
+                    attributeDefinition.type = "QUANTITY";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_SET_OF_STRING) {
+                    attributeDefinition.type = "SET_OF_STRING";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_SET_OF_INT) {
+                    attributeDefinition.type = "SET_OF_INT";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_SET_OF_NUMBER) {
+                    attributeDefinition.type = "SET_OF_NUMBER";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_ENUM_OF_STRING) {
+                    attributeDefinition.type = "ENUM_OF_STRING";
+                }
+
+                if (systemAttributeDefinition.getValueTypeCode() == dw.object.ObjectAttributeDefinition.VALUE_TYPE_ENUM_OF_INT) {
+                    attributeDefinition.type = "ENUM_OF_INT";
+                }
+                var selectableValues = [];
+
+                for (var index in systemAttributeDefinition.getValues()) {
+                    var selectableValue = systemAttributeDefinition.getValues()[index];
+
+                    selectableValues.push({"id": selectableValue.getValue(), "displayValue": selectableValue.getDisplayValue()});
+                }
+                attributeDefinition.selectableValues = selectableValues;
+                attributeDefinition.displayName = systemAttributeDefinition.displayName;
+                attributeDefinition.multiValueType = systemAttributeDefinition.multiValueType;
+                attributeDefinition.readonly = !!attributeDefinition.readonly;
+                attributeDefinition.key = !!systemAttributeDefinition.key;
+                attributeDefinition.system = systemAttributeDefinition.isSystem();
+                attributeDefinition.isSystem = systemAttributeDefinition.isSystem();
+                attributeDefinition.ID = systemAttributeDefinition.getID();
+                attributeDefinition.transientAttribute = false;
+
+                definition[systemAttributeDefinition.getID()] = attributeDefinition;
+                // store ID field to avoid another loop in getIdField()
+                if (systemAttributeDefinition.key) {
+                    this.idField = systemAttributeDefinition.ID;
+                }
+            }
+            // if no field is key, use UUID (happens for system types)
+            if (!this.idField) {
+                this.idField = "UUID";
+            }
+        } else {
+            return null;
+        }
+
+        return definition;
+
+    },
+
+    /**
+    	 *	Get key attribute for data coming from client - by convention, client sends the key attribute first
+    	 *
+    	 *	@param {Object} transientObject 	object to check for key attribute
+    	 */
+    getIdField : function(transientObject) {
+        // use primary key of object
+        if (!this.idField) {
+            var attributeDefinitions = this.typeDefinition.getAttributeDefinitions();
+
+            for (var i  in attributeDefinitions) {
+                var typeDefinition = attributeDefinitions[i];
+
+                if (typeDefinition.key) {
+                    this.idField = typeDefinition.ID;
+                    break;
+                }
+            }
+        }
+        // otherwise use first attribute, should theoretically never happen
+        if (!this.idField && transientObject) {
+            for (var name in transientObject) {
+                this.idField = name;
+                break;
+            }
+        }
+
+        return this.idField;
+    }
+});
+
+/**
+ * Object Helper, provides CRUD methods for server side persistent objects
+ * @type {ObjectHelper}
+ */
+if (typeof (exports) !== 'undefined') {
+    exports.ObjectHelper = ObjectHelper;
+}

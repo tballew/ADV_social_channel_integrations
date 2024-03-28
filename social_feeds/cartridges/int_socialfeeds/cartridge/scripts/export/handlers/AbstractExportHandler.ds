@@ -1,0 +1,158 @@
+importPackage( dw.system );
+importPackage( dw.catalog );
+importPackage( dw.order );
+importPackage( dw.customer);
+
+importScript('bc_library:object-handling/libInheritance.ds');
+
+var Tracker = require('../FeedTrackerUtils.js');
+
+const SOCIAL_CHANNEL_GOOGLE = 'SOCIALCHANNELGOOGLE';
+const SOCIAL_CHANNEL_INSTAGRAM = 'SOCIALCHANNELINSTAGRAM';
+const SOCIAL_CHANNEL_SNAPCHAT = 'SOCIALCHANNELSNAPCHAT';
+const SOCIAL_CHANNEL_TIKTOK = 'SOCIALCHANNELTIKTOK';
+
+// Hack, because vars cannot be imported in DW, only functions
+function getAbstractExportHandler() {
+    return AbstractExportHandler;
+}
+
+var AbstractExportHandler = Class.extend(
+        /** @lends AbstractExportHandler.prototype */
+        {
+            /**
+             * Creates a new handler instance Implementing classes need to set
+             * this.handlesXXX to indicate to the manager which methods are
+             * handled.
+             * 
+             * @constructs
+             */
+            init : function(){
+                this.handlesMasters = false;
+                this.handlesProducts = false;
+                this.handlesCategories = false;
+                this.handlesCategoryAssignments = false;
+                // open file writer here
+            },
+            /**
+             * Handles a master product, called once per master
+             * 
+             * @param {dw.catalog.Product} product The product to export
+             */
+            exportMaster: function (product : dw.catalog.Product) {
+            },
+            /**
+             * Handles a (non-master) product, called once per product
+             * 
+             * @param {dw.catalog.Product} product The product to export
+             */
+            exportProduct : function (product : dw.catalog.Product){
+            },
+            /**
+             * Checks whether a (non-master) product should be exported or skipped
+             * 
+             * @param {dw.catalog.Product} product The product to export
+             * @return {Boolean} True if the product should be exported
+             */
+            shouldExportProduct : function (product : dw.catalog.Product, locales, price, socialCategory) {
+                if (!this.includeOfflineProducts && !product.isOnline()) {
+                    return false;
+                }
+
+                if (!this.includeOfflineProducts && (!product.onlineFlag && !product.onlineFrom)) {
+                    return false;
+                }
+
+                if (!this.includeOutOfStockProducts && !product.getAvailabilityModel().isInStock()) {
+                    //Product has no inventory and out of stock products are not included.
+                    //We check if we should include searchable if unavailable products regardless of inventory.
+                    if (!this.includeSearchableIfUnavailableProducts || !product.searchableIfUnavailableFlag) {
+                        return false;
+                    }
+                }
+
+                if (!empty(socialCategory) && socialCategory.toUpperCase() == SOCIAL_CHANNEL_INSTAGRAM) {
+                    if (empty(price) || empty(product.getPriceModel()) || empty(product.getPriceModel().getPrice()) || product.getPriceModel().getPrice().isAvailable() == false) {
+                        return false;
+                    }
+                }
+
+                if (empty(price) || empty(product.getPriceModel()) || empty(product.getPriceModel().getPrice())) {
+                    return false;
+                }
+                
+                if (this.tracker && 
+                    ((this.deltaCatalogInDays && this.deltaCatalogInDays > 0) || this.generateDeleteFeed)) {
+                    Tracker.trackProduct(this.tracker, product, price);
+                }
+
+                //if delta feed is enabled with a postive integer, export only delta days of data
+                if (this.deltaCatalogInDays && this.deltaCatalogInDays > 0) {
+                    var lastModified;
+                    var deltaFeedExport = false;
+                    var lastModifiedExport = false;
+                    var priceChanged = false;
+
+                    if(product.isVariant() && product.variationModel.master) {
+                        lastModified = Math.max(product.variationModel.master.lastModified, product.lastModified);
+                    } else {
+                        lastModified = product.lastModified;
+                    }
+
+                    // check if last modified enables the product for export
+                    if (Math.abs(new Date() - lastModified) / 1000 / 3600 / 24 <= this.deltaCatalogInDays) {
+                        lastModifiedExport = true;
+                    }
+
+                    if(this.previousTracker) {
+                        priceChanged = Tracker.hasPriceChanged(this.previousTracker, product, price);
+                    }
+
+                    if(!priceChanged && !lastModifiedExport) {
+                        return false;
+                    }
+                }
+
+                return true;
+            },
+
+            /**
+             * Handles a order, called once per order
+             *
+             * @param {dw.order.Order} order The order to export
+             */
+            exportOrder : function (order : dw.order.Order){
+            },
+            /**
+             * Handles a profile, called once per customer profile
+             *
+             * @param {dw.customer.Profile} profile The customer profile to export
+             */
+            exportProfile : function (profile : dw.customer.Profile){
+            },
+            /**
+             * Handles a category, the category tree is traversed recursively
+             *
+             * @param {dw.catalog.Category} category The category to export
+             */
+            exportCategory : function (category : dw.catalog.Category){
+            },
+            /**
+             * Handles a category assignment
+             *
+             * @param {dw.catalog.Category} category The category to export
+             */
+            exportCategoryAssignment : function (pca : dw.catalog.CategoryAssignment){
+            },
+            /**
+             * Called once at the begin of the export, initialize Writers here
+             */
+            beginExport : function() {
+            },
+            /**
+             * Called once at the end of the export, close all resources like
+             * Writers here
+             */
+            endExport: function (params) {
+            }
+        });

@@ -1,0 +1,103 @@
+.site-main-stage {
+    max-width: 1380px;
+    margin: auto;
+}
+
+.slds-col--h-1 {
+    margin-bottom: 15px;
+}
+
+.slds-col--1 .slds-button-row {
+    padding: 10px 0;
+}
+
+.slds-col--1 .productsocial-feed-list-content {
+    overflow-y: auto;
+    height: 300px;
+}
+
+.slds-col--1 .slds-table tbody tr:hover {
+    cursor: pointer;
+}
+
+.slds-col--1 .slds-table tbody tr.selected {
+    background-color: rgba(0,0,0,.2);
+}
+
+.slds-col--2 .slds-form-element {
+    padding: 10px 0;
+}
+
+.slds-col--2 .slds-list_horizontal li {
+    padding-right: 10px;
+}
+
+.slds-col--2 table td {
+    max-width: 220px;
+    padding: 10px 10px 0 10px;
+}
+
+.slds-col--2 #feed-data-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #adadad;
+}
+
+.slds-col--2 .slds-textarea {
+    min-height: 250px;
+}
+
+.slds-col--2 #folderName-combobox-value {
+    border-color: transparent;
+}
+
+.slds-col--3 .slds-textarea {
+    min-height: 600px;
+}
+
+#test-gen-feed-product-picker-modal .slds-modal__footer .slds-button {
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+#productPickerModal {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#productPickerModal .slds-modal__container {
+    position: relative;
+    margin: auto;
+    height: auto;
+    padding: 0;
+}
+
+.slds-modal__footer .slds-col {
+    padding-bottom: 15px;
+}
+
+
+.slds-hint-parent--products {
+    cursor: pointer;
+}
+
+#customModal {
+    float: left;
+    position: fixed;
+    z-index: 9001;
+    top: 50%;
+    background: transparent;
+    padding: 0;
+    min-height: auto;
+    display: block;
+    height: 170px;
+    width: 450px;
+    margin-top: -75px;
+    margin-left: 50%;
+    left: -225px;
+}
+
+#informational {
+    text-align: center;
+}

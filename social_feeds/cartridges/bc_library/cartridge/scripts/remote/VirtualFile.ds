@@ -1,0 +1,206 @@
+var Logger = require('dw/system/Logger');
+
+var TransferClient = require('/bc_library/cartridge/scripts/remote/TransferClient.ds').TransferClient;
+
+/**
+ *
+ *	An API com
+ *
+ *	@param {string} path
+ *
+ */
+function VirtualFile(path) {
+    this.fullUrl = path;
+    this.transferClient = new TransferClient(path);
+
+    if (path.substring(path.length - 1, path.length) != "/") {
+        this.name = path.substring(path.lastIndexOf("/") + 1, path.length);
+    } else {
+        this.name = path.substring(path.lastIndexOf("/", path.length - 2) + 1, path.length - 1);
+    }
+}
+
+VirtualFile.closeAll = function() {
+    TransferClient.closeAll();
+};
+
+VirtualFile.prototype.remove = function() {};
+
+/**
+ * Getter for this.name
+ *
+ * @return {string} filename
+ */
+VirtualFile.prototype.getName = function() {
+    return this.name;
+};
+VirtualFile.prototype.length = function() {};
+VirtualFile.prototype.zip = function() {};
+VirtualFile.prototype.list = function() {};
+
+/**
+ * check file existance
+ *
+ * @return {boolean} true if the file exists, else false
+ */
+VirtualFile.prototype.exists = function() {
+    return true;
+};
+
+VirtualFile.prototype.createNewFile = function() {};
+
+/**
+ * Setter isADirectory
+ *
+ * @private
+ *
+ */
+VirtualFile.prototype.setDirectoryState = function(isADirectory) {
+    this.isADirectory = isADirectory;
+};
+/**
+ * Check if it is a directory
+ *
+ * @return {boolean} true if it is a directory, else false
+ */
+VirtualFile.prototype.isDirectory = function() {
+    var that = this;
+    var tsc = this.transferClient;
+
+    if (typeof (this.isADirectory) != 'undefined') {
+        return this.isADirectory;
+
+    } else {
+        var returnInfos = this.transferClient.list(this.path);
+
+        if (returnInfos && returnInfos.length > 0) {
+            // webdav returns the same file if you list on a file
+            if (returnInfos.length == 1 && returnInfos[0].name == this.transferClient.urlObject.file) {
+                this.isADirectory = false;
+            } else {
+                this.isADirectory = true;
+            }
+        } else {
+            this.isADirectory = false;
+        }
+
+        return this.isADirectory;
+    }
+};
+
+/**
+ * Check if it is a directory
+ *
+ * @return {boolean} true if it is a file, else false
+ */
+VirtualFile.prototype.isFile = function() {
+    return !this.isDirecory();
+};
+VirtualFile.prototype.lastModified = function() {};
+
+/**
+ * Returns a list of VirtualFile objects containing information about the files in the current directory.
+ *
+ * @return {Array} virtualFiles
+ */
+VirtualFile.prototype.listFiles = function() {
+    // debugging helper
+    var that = this;
+    var returnInfos = this.transferClient.list(this.transferClient.urlObject.directory);
+    var virtualFiles = [];
+
+    for (var index in returnInfos) {
+        var returnInfo = returnInfos[index];
+
+        if (!('path' in returnInfo) || this.transferClient.urlObject.directory != returnInfo.path) {
+            var virtualFile = null;
+
+            if (returnInfo.directory ||  (returnInfo.size === 0 && !returnInfo.name.match(/([\S])\.\S{3}/))) {
+                virtualFile = new VirtualFile(this.transferClient.urlString + returnInfo.name + "/");
+                virtualFile.setDirectoryState(true);
+            } else {
+                virtualFile = new VirtualFile(this.transferClient.urlString + returnInfo.name);
+                virtualFile.setDirectoryState(false);
+            }
+            virtualFile.name = returnInfo.name;
+            virtualFile.parent = this;
+            virtualFiles.push(virtualFile);
+        }
+
+    }
+
+    return virtualFiles;
+
+};
+VirtualFile.prototype.mkdir = function() {};
+VirtualFile.prototype.mkdirs = function() {};
+VirtualFile.prototype.renameTo = function() {};
+
+/**
+ * Get root directory
+ *
+ * @return {string} "REMOTE"
+ */
+VirtualFile.getRootDirectory = function() {
+    return "REMOTE";
+};
+VirtualFile.prototype.getRootDirectoryType = function() {};
+
+/**
+ * Returns the path of the VirtualFile
+ *
+ * @return {string} path
+ */
+VirtualFile.prototype.getFullPath = function() {
+    return this.path;
+};
+
+/**
+ * Mocks the getPath() method of the underlying TransferClient
+ *
+ * @return {string} path
+ */
+
+VirtualFile.prototype.getPath = function() {
+    return this.transferClient.urlObject.directory + this.transferClient.urlObject.file;
+};
+VirtualFile.prototype.unzip = function() {};
+VirtualFile.prototype.gzip = function() {};
+VirtualFile.prototype.gunzip = function() {};
+
+/**
+ * Returns a string representation
+ *
+ * @return {string}
+ */
+VirtualFile.prototype.toString = function() {
+    return "Virtual FILE: " + this.transferClient.urlString;
+};
+/**
+* @param {Object} vfile
+*/
+VirtualFile.prototype.sameServer = function(vfile) {
+    if ((this.transferCient.userName == vfile.transferCient.userName) &&
+    (this.transferCient.serverType == vfile.transferCient.serverType) &&
+    (this.transferCient.urlObject.host == vfile.transferCient.urlObject.host)) {
+
+        return true;
+    } else {
+        return false;
+    }
+};
+
+VirtualFile.prototype.name = null;
+VirtualFile.prototype.path = null;
+VirtualFile.prototype.virtual = true;
+VirtualFile.prototype.rootDirectory = "REMOTE";
+VirtualFile.prototype.rootDirectoryType = "REMOTE";
+VirtualFile.prototype.virtual = true;
+VirtualFile.prototype.__defineGetter__("fullPath", function() {
+    return this.fullUrl;
+});
+VirtualFile.prototype.__defineGetter__("path", function() {
+    return this.transferClient.urlObject.directory + this.transferClient.urlObject.file;
+});
+
+exports.VirtualFile = VirtualFile;

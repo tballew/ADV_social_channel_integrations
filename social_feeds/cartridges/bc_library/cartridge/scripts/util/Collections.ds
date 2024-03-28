@@ -1,0 +1,420 @@
+var ArrayList = require('dw/util').ArrayList;
+
+/**
+* Provides utility functions for Collections which are not provided out of the box by Demandware.
+* The provided functionality is heavily influenced by underscore.js.
+*
+* @namespace Collections
+*/
+var Collections = function() {};
+
+/**
+* @callback Iteratee
+* @memberof Collections
+* @param {Object} value Currently iterated element of collection
+* @param {number} index Index in the collection of the currently iterated object
+* @param {dw.util.Collection} collection Collection iterated
+*/
+
+/**
+* @callback Mapper
+* @memberof Collections
+* @param {Object} value Currently iterated element of collection
+* @param {number} index Index in the collection of the currently iterated object
+* @param {dw.util.Collection} collection Collection iterated
+*
+* @returns {Object}
+*/
+
+/**
+* @callback Predicate
+* @memberof Collections
+* @param {Object} value Currently checked element of the collection
+*
+* @returns {Boolean}
+*/
+
+/**
+* @callback Reduce
+* @memberof Collections
+* @param {Object} value Currently iterated element of collection
+* @param {Object} memo current state of the reduction
+*
+* @returns {Object} The memo after applying the current element's value
+*/
+
+/**
+* @callback Equals
+* @memberof Collections
+* @param {Object} elementCollOne the currently iterated element of one collection to check for equality
+* @param {Object} elementCollTwo the currently iterated element of the other collection to check for equality
+*
+* @returns {Boolean} true if the elements of both collections are equal otherwise false
+*
+*/
+
+/**
+* Iterates over a list of elements, passing each element to an iteratee function.
+* The iteratee function is bound to the context if one is passed. Returns the collection
+* for chaining.
+*
+* @function each
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply each to
+* @param {!Iteratee} iteratee
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {dw.util.Collection}
+*/
+Collections.each = function(collection, iteratee, context) {
+
+    if (!empty(collection)) {
+        var index = 0,
+        iterated = null,
+        iterator = collection.iterator();
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                iteratee.call(context, iterated, index, collection);
+            } else {
+                iteratee(iterated, index, collection);
+            }
+
+            index++;
+        }
+
+        return collection;
+    } else {
+        return dw.util.List.EMPTY_LIST;
+    }
+};
+
+/**
+* Iterates over a list of elements, mapping each element to Mapper function.
+* The Mapper function is bound to the context if one is passed. From the results of the
+* Mapper function a new Collection is built.
+*
+* @function map
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply map to
+* @param {!Mapper} mapFunction map function which is applied to each element in the collection
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {dw.util.Collection}
+*/
+Collections.map = function(collection, mapFunction, context) {
+    if (!empty(collection)) {
+        var index = 0,
+        iterated = null,
+        iterator = collection.iterator(),
+        returnedCollection = collection.clone();
+
+        returnedCollection.clear();
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                returnedCollection.add(mapFunction.call(context, iterated, index, collection));
+            } else {
+                returnedCollection.add(mapFunction(iterated, index, collection));
+            }
+
+            index++;
+        }
+
+        return returnedCollection;
+    } else {
+        return dw.util.List.EMPTY_LIST;
+    }
+};
+
+/**
+*
+* Looks through each value in a collection and checks against provided predicate function. If
+* it passes the predicate function then the value is added to the resulting array
+*
+* @function filter
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply filter to
+* @param {!Predicate} predicate
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {dw.util.Collection}
+*/
+Collections.filter = function(collection, predicate, context) {
+    if (!empty(collection)) {
+        var index = 0,
+        iterated = null,
+        iterator = collection.iterator(),
+        returnedCollection = collection.clone();
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                if (predicate.call(context, iterated) !== true) {
+                    returnedCollection.remove(iterated);
+                }
+            } else {
+                if (predicate(iterated) !== true) {
+                    returnedCollection.remove(iterated);
+                }
+            }
+
+            index++;
+        }
+
+        return returnedCollection;
+    } else {
+        return dw.util.List.EMPTY_LIST;
+    }
+};
+
+/**
+*
+* Looks through each value in a collection and checks against provided predicate function. If at least
+* one value of the collection passes the predicate test then true is returned. Else false is returned
+*
+* @function some
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply filter to
+* @param {!Predicate} predicate
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {Boolean}
+*/
+Collections.some = function(collection, predicate, context) {
+    if (!empty(collection)) {
+        var index = 0,
+        iterated = null,
+        iterator  = collection.iterator();
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                if (predicate.call(context, iterated) === true) {
+                    return true;
+                }
+            } else {
+                if (predicate(iterated) === true) {
+                    return true;
+                }
+            }
+
+            index++;
+        }
+
+        return false;
+    } else {
+        return false;
+    }
+};
+
+/**
+* Looks through each value in a collection and checks against provided predicate function. If all values
+* of the collection passes the predicate test then true is returned. Else false is returned.
+*
+* @function every
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply filter to
+* @param {!Predicate} predicate
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {Boolean}
+*/
+Collections.every = function(collection, predicate, context) {
+    if (!empty(collection)) {
+        var index = 0,
+        iterated = null,
+        iterator = collection.iterator();
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                if (predicate.call(context, iterated) === false) {
+                    return false;
+                }
+            } else {
+                if (predicate(iterated) === false) {
+                    return false;
+                }
+            }
+
+            index++;
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+};
+
+/**
+* Boils down a collection of values into a single value. Elements
+* of the list are applied to the reducer from left to right. The reducer
+* function returns the state of the memo after the application of the reduction.
+* The returned value is then handed over to the next call of the reducer on the
+* next element of the list. Finally the memo is returned.
+*
+* If no memo is handed as parameter to the reduce call then the reducer will be skipped
+* for the first element and the value of the first element will be used as memo for the call
+* of the reducer on the second element of the collection.
+*
+* @function reduce
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection Collection to apply filter to
+* @param {!Reduce} reducer reducer function to call
+* @param {Object=} memo initial state of the reduction
+* @param {Object=} context Context the iteratee function is bound to
+*
+* @returns {Object} Memo after the application of the reducer to the last element of the collection.
+*/
+Collections.reduce = function(collection, reducer, memo, context) {
+    if (!empty(collection)) {
+        var index = 0,
+        memoVal = null,
+        iterated = null,
+        iterator = collection.iterator();
+
+        if (!empty(memo)) {
+            memoVal = memo;
+        } else {
+            memoVal = iterator.next();
+        }
+
+        while (iterator.hasNext()) {
+            iterated = iterator.next();
+
+            if (!empty(context)) {
+                memoVal = reducer.call(context, iterated, memoVal);
+            } else {
+                memoVal = reducer(iterated, memoVal);
+            }
+
+            index++;
+        }
+
+        return memoVal;
+    } else {
+        return null;
+    }
+};
+
+/**
+* Checks two collections for equality. The collections do not necessarly need to be of the same type.
+* If both collections do not have the same number of elements then false will be returned. Otherwise
+* every element of the one collection is compared to the element of the collection at the same index
+* by calling the equals function. Only if the equals function returns true for every call the both
+* collections are considered equal and the function returns true.
+*
+* @function equals
+* @memberof Collections
+*
+* @param {dw.util.Collection} collectionOne
+* @param {dw.util.Collection} collectionTwo
+* @param {Equals} equals function to call for comparison of elements
+* @param {Object=} context object the this pointer is set to in the equals function
+*
+* @returns {boolean}
+*
+*/
+Collections.equals = function(collectionOne, collectionTwo, equals, context) {
+    if (!empty(collectionOne) && !empty(collectionTwo)) {
+        if (collectionOne.length === collectionTwo.length) {
+            var iteratedFirst = null,
+            iteratedSecond = null,
+            iteratorFirst = collectionOne.iterator(),
+            iteratorSecond = collectionTwo.iterator(),
+            returnValue = false;
+
+            while (iteratorFirst.hasNext() && iteratorSecond.hasNext()) {
+                iteratedFirst = iteratorFirst.next();
+                iteratedSecond = iteratorSecond.next();
+
+                if (!empty(context)) {
+                    returnValue = equals.call(context, iteratedFirst, iteratedSecond);
+                } else {
+                    returnValue = equals(iteratedFirst, iteratedSecond);
+                }
+
+                if (returnValue === false) {
+                    return false;
+                }
+            }
+
+            return true;
+
+        } else {
+            return false;
+        }
+    } else {
+        return (empty(collectionOne) && empty(collectionTwo));
+    }
+};
+
+/**
+* Transforms an array into a List whose elements are iterated the same way as the array
+*
+* @function toList
+* @memberof Collections
+*
+* @param {Array} arrayConvert Array to convert into a list
+*
+* @returns {ArrayList} Converted list
+*/
+Collections.toList = function(arrayConvert) {
+    if (!empty(arrayConvert)) {
+        var returnList = new ArrayList();
+
+        for (var i = 0; i < arrayConvert.length; i++) {
+            returnList.add(arrayConvert[i]);
+        }
+
+        return returnList;
+
+    } else {
+        return new ArrayList();
+    }
+};
+
+/**
+* Converts a collection into an array
+*
+* @function toArray
+* @memberof Collections
+*
+* @param {dw.util.Collection} collection to convert into an Array
+*
+*/
+Collections.toArray = function(collection) {
+    if (!empty(collection)) {
+        var iterator = collection.iterator(),
+        element = null,
+        resultArray = [];
+
+        while (iterator.hasNext()) {
+            element = iterator.next();
+            resultArray.push(element);
+        }
+
+        return resultArray;
+
+    } else {
+        return [];
+    }
+};
+
+if (typeof (exports) !== 'undefined') {
+    exports.Collections = Collections;
+}

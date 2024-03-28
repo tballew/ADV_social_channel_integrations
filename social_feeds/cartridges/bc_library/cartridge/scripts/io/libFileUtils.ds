@@ -1,0 +1,201 @@
+/*
+* usage:
+importScript("bc_library:io/libFileUtils.ds");**DEPRECATED**
+require("bc_library/cartridge/scripts/io/libFileUtils").FileUtils;
+*/
+
+importPackage(dw.io);
+importPackage(dw.system);
+
+function FileUtils() {
+
+}
+
+/**
+ * Copy source file to target location. All directories will be created if is necessary.
+ *
+ * @param {String} sourceString
+ * @param {String} targetString
+ */
+FileUtils.copyFile = function(sourceString, targetString) {
+
+    var source = new File(sourceString);
+    var target = new File(targetString);
+
+    if (!source.isDirectory() && !target.isDirectory()) {
+        var targetPath = target.fullPath.split(File.SEPARATOR);
+
+        targetPath.pop();
+        var targetFolder = targetPath.join(File.SEPARATOR);
+
+        (new File(targetFolder)).mkdirs();
+        var fileReader = new FileReader(source, "latin1");
+        var fileWriter = new FileWriter(target, "latin1", false);
+
+        var bytesToCopy = source.length();
+        var buffer;
+
+        do {
+            if (bytesToCopy > 10240) {
+                buffer = fileReader.read(10240);
+                bytesToCopy = bytesToCopy - 10240;
+            } else {
+                buffer = fileReader.read(bytesToCopy);
+                bytesToCopy = 0;
+            }
+
+            if (buffer !== null) {
+                fileWriter.write(buffer);
+            }
+        } while (bytesToCopy !== 0);
+
+        fileReader.close();
+        fileWriter.flush();
+        fileWriter.close();
+    } else {
+        target.mkdirs();
+        var sourceFile = source;
+
+        var targetZipFileName = target.fullPath + ".zip";
+        var targetZipped = new File(targetZipFileName);
+
+        sourceFile.zip(targetZipped);
+
+        var targetDirectory = FileUtils.findFileDirectory(targetZipped);
+
+        targetZipped.unzip(targetDirectory);
+        targetZipped.remove();
+
+    }
+};
+
+/**
+ * Ensures existence of file directories
+ *
+ * @param {File} targetFile
+ */
+FileUtils.ensureFileDirectories = function(targetFile) {
+    var targetFilePath = targetFile.fullPath;
+    var index = targetFilePath.lastIndexOf(File.SEPARATOR);
+    var directoryFilePath = targetFilePath.substr(0, index);
+
+    new File(directoryFilePath).mkdirs();
+};
+
+/**
+ * Find directory for given file
+ *
+ * @param {dw.io.File} file
+ */
+FileUtils.findFileDirectory = function(file) {
+    var filePath = file.getFullPath();
+
+    var lastSlashIndex = filePath.lastIndexOf('/');
+    var directoryPath = filePath.substring(0, lastSlashIndex);
+    var directory = new File(directoryPath);
+
+    return directory;
+};
+
+/**
+ *
+ * Delete given derectory and all files and subdirectories in it
+ *
+ * @param {File} file
+ */
+FileUtils.deleteDirectory = function(file) {
+    if (!file.isDirectory()) {
+        throw new Error("file instance is not directory");
+    }
+
+    var fileNames = file.list();
+
+    for (var index in fileNames) {
+        var filePath = file.getFullPath() + File.SEPARATOR + fileNames[index];
+        var processedFile = new File(filePath);
+
+        if (processedFile.isDirectory()) {
+            FileUtils.deleteDirectory(processedFile);
+        } else {
+            processedFile.remove();
+        }
+    }
+
+    file.remove();
+};
+
+/**
+ *
+ * creates a file and it's parent folder in case it does not exist
+ *
+ * @param {File} file
+ */
+FileUtils.createFileAndFolders = function(file) {
+    var path = file.fullPath.split(File.SEPARATOR);
+
+    path.pop();
+    var folder = new File(path.join(File.SEPARATOR));
+
+    if (!folder.exists()) {
+        folder.mkdirs();
+    }
+
+    if (!file.exists()) {
+        file.createNewFile();
+    }
+
+};
+
+/**
+ *
+ * Delete all files and directories in given directory, respectively - clear directory content.
+ *
+ * @param {dw.io.File} file
+ */
+FileUtils.emptyDirectory = function(file) {
+    if (!file.isDirectory()) {
+        throw new Error("file instance is not directory");
+    }
+
+    var fileNames = file.list();
+
+    for (var index in fileNames) {
+        var filePath = file.getFullPath() + File.SEPARATOR + fileNames[index];
+        var processedFile = new File(filePath);
+
+        if (processedFile.isDirectory()) {
+            FileUtils.deleteDirectory(processedFile);
+        } else {
+            processedFile.remove();
+        }
+    }
+};
+/**
+ *
+ * checks a file pattern for specific placeholders and exchanges them
+ * valid placeholders: {siteID}
+ *
+ * @param {String} filePattern
+ * @return {String} modified filePattern
+ */
+FileUtils.checkFilePatternForPlaceholders = function(filePattern) {
+    if (empty(filePattern)) {
+        throw new Error("filePattern was empty");
+    }
+
+    if (filePattern.match(/\{siteID\}/)) {
+        var siteID = dw.system.Site.getCurrent().getID();
+
+        if (siteID == 'Sites-Site') {
+            throw new Error("SiteID placeholder found but site context missing");
+        }
+
+        filePattern = filePattern.replace(/\{siteID\}/ig, siteID);
+    }
+
+    return filePattern;
+};
+
+if (typeof (exports) !== 'undefined') {
+    exports.FileUtils = FileUtils;
+}

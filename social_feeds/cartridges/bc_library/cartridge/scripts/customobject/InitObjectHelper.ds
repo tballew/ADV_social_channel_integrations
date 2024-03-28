@@ -1,0 +1,38 @@
+/**
+ * Helper object providing useful auxiliary functions for Custom objects
+ * @ deprecated - just used by pipeline version
+ *
+ * @input Type : String
+ * @input System : Boolean
+ * @input Config : String
+ * @output ObjectHelper : Object
+ *
+ * @author Danny Gehl
+ */
+importPackage( dw.system );
+importPackage( dw.object );
+importPackage( dw.campaign );
+importPackage( dw.catalog );
+importPackage( dw.content );
+
+
+function execute( pdict : PipelineDictionary ) : Number
+{
+	var config = null;
+
+	if (pdict.Config != "undefined") {
+		config = JSON.parse(pdict.Config);
+	}
+	var ObjectHelper = null;
+	if (!empty(config) && config.helperClassPath) {
+		ObjectHelper = require(config.helperClassPath).ObjectHelper;
+	} else {
+		ObjectHelper = require("bc_library/cartridge/scripts/customobject/ObjectHelper").ObjectHelper;
+	}
+
+    pdict.ObjectHelper = new ObjectHelper(pdict.Type, pdict.System, config);
+
+   return PIPELET_NEXT;
+}
+
+var _global = this;

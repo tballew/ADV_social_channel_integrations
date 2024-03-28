@@ -1,0 +1,8 @@
+
+var CustomError = require('bc_library/cartridge/scripts/system/CustomError.ds').CustomError;
+
+var XMLParseError = CustomError.defineCustomError('XMLParseError');
+
+if (typeof (exports) !== 'undefined') {
+    exports.XMLParseError = XMLParseError;
+}

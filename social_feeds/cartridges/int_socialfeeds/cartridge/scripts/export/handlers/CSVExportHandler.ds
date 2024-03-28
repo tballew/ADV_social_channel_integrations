@@ -1,0 +1,357 @@
+/**
+ * Demandware Script File
+ */
+importPackage( dw.system );
+importPackage( dw.io );
+importPackage( dw.catalog );
+importScript( 'export/handlers/AbstractExportHandler.ds' );
+importScript( 'export/ProductFieldMapper.ds' );
+
+var HashMap = require('dw/util/HashMap');
+var Logger = require('dw/system/Logger').getLogger('GlobalFeedExport', 'GlobalFeedExport');
+var FeedTracker = require('../FeedTrackerUtils.js');
+var CustomSocialFeedsHelper = require('../../helpers/customSocialFeeds.js');
+var StringUtils = require('dw/util/StringUtils');
+var fileHelpers = require('*/cartridge/scripts/social/helpers/fileHelpers');
+
+const SOCIAL_CHANNEL_GOOGLE = 'SOCIALCHANNELGOOGLE';
+const SOCIAL_CHANNEL_INSTAGRAM = 'SOCIALCHANNELINSTAGRAM';
+const SOCIAL_CHANNEL_SNAPCHAT = 'SOCIALCHANNELSNAPCHAT';
+const SOCIAL_CHANNEL_TIKTOK = 'SOCIALCHANNELTIKTOK';
+
+// Hack, because vars cannot be imported in DW, only functions
+function getCSVExportHandler() {
+    return CSVExportHandler;
+}
+var AbstractExportHandler = getAbstractExportHandler();
+
+var CSVExportHandler = AbstractExportHandler.extend(
+        /** @lends CSVExportHandler.prototype */
+        {
+            /**
+             * Creates a new CSV export handler instance
+             *
+             * @constructs
+             * @augments AbstractExportHandler
+             * @param {dw.io.File} file The file to export to
+             * @param {String} encoding The file encoding
+             * @param {String} separator The separator to use
+             * @param {Array} fields An array with the fields to use
+             * @param {Array} header An array with the header to use
+             */
+            init : function(
+                writer : Writer,
+                separator,
+                fields : Array,
+                header : Array,
+                contextObject : String,
+                includeOfflineProducts : Boolean,
+                includeOutOfStockProducts : Boolean,
+                includeNoPriceProducts : Boolean,
+                includeSearchableIfUnavailableProducts : Boolean,
+                socialCategory: String,
+                googleShoppingCategories : String,
+                hostName: String,
+                file : File,
+                locale: String,
+                locales: String,
+                localizedCategories : Boolean,
+                deltaCatalogInDays : String,
+                generateDeleteFeed : Boolean,
+                exportCategoryId : String,
+                generatedFiles : Array
+            ) {
+                if(separator == "\\t") {
+                    separator = "\t";
+                }
+
+                this.handlesMasters = false;
+                this.handlesProducts = true;
+
+                this.fileWriter = writer;
+                this.writer = new CSVStreamWriter(this.fileWriter, separator);
+                this.header = header || fields;
+                this.fields = fields;
+                this.separator = separator;
+                this.contextObject = contextObject;
+                this.includeOfflineProducts = includeOfflineProducts;
+                this.includeOutOfStockProducts = includeOutOfStockProducts;
+                this.includeNoPriceProducts = includeNoPriceProducts;
+                this.includeSearchableIfUnavailableProducts = includeSearchableIfUnavailableProducts;
+                this.socialCategory = socialCategory;
+                if (Object.hasOwnProperty.call(this.socialCategory, 'value') && this.socialCategory.value) {
+                    this.socialCategory = this.socialCategory.value;
+                }
+                this.googleShoppingCategories = googleShoppingCategories;
+                this.hostName = hostName || null;
+                this.locale = locale;
+                this.file = file;
+                this.locales = locales;
+                this.localizedCategories = localizedCategories;
+                this.deltaCatalogInDays = deltaCatalogInDays;
+                this.generateDeleteFeed = generateDeleteFeed;
+                this.exportCategoryId = exportCategoryId;
+
+                this.generatedFiles = generatedFiles;
+
+                this.tracker = new HashMap();
+                this.previousTracker = null;
+                
+                if (this.socialCategory.toUpperCase() === SOCIAL_CHANNEL_INSTAGRAM) {
+                    if (!empty(this.fields) && this.fields.map(function(f) { return f.toLowerCase(); }).indexOf('productdeeplink') < 0) {
+                        this.header.push('productDeeplink');
+                        this.fields.push('productDeeplink');
+                    }
+                    if (!empty(this.fields) && this.fields.map(function(f) { return f.toLowerCase(); }).indexOf('metacategoriespath') >= 0) {
+                        this.initProductCatalogs();
+                    }
+                }
+                if ('Catalog' === contextObject) {
+                    this.initProductFieldCache();
+                    this.initPreviousTracker();
+                } else if ('Order' === contextObject) {
+                    this.initOrderFieldCache();
+                } else if ('Customer' === contextObject) {
+                    this.initProfileFieldCache();
+                }
+            },
+            /**
+             * Initialize product catalogs if the export is running for metacategoriespath
+             */
+            initProductCatalogs : function() {
+                try {
+                    var CatalogMgr = require('dw/catalog/CatalogMgr');
+                    var catalogs = [];
+
+                    var cat = CatalogMgr.getSiteCatalog();
+                    catalogs.push({
+                        catalogID: cat.ID,
+                        rootUUID: cat.root.UUID
+                    });
+                    
+                    ProductFieldMapper.setCurrentCatalogs(catalogs);
+                } catch (e) {
+                    Logger.error('The catalog list could not be obtained, metaCategoriesPath will be empty for all products. ' + e.message);
+                }
+            },
+            /**
+             * Initialize a field cache to avoid parsing the expressions for every product
+             *
+             * @param {dw.catalog.Product} product A product to get the attribute model (can be any product)
+             */
+            initProductFieldCache : function(product : Product) {
+                this.fieldCache = {};
+                for each(var field : String in this.fields){
+                    this.fieldCache[field] = ProductFieldMapper.parseField(field, product);
+                }
+                if (!empty(this.hostName)) {
+                    ProductFieldMapper.setCurrentHost(this.hostName);
+                }
+                if (!empty(this.locale)) {
+                    ProductFieldMapper.setCurrentLocale(this.locale);
+                }
+            },
+            initPreviousTracker : function() {
+                if (this.deltaCatalogInDays && this.deltaCatalogInDays > 0) {
+                    var dirPath = this.file.getFullPath().split('').join(''); //make copy of the string
+                    dirPath = dirPath.slice(0, dirPath.lastIndexOf('/'));
+                    this.previousTracker = FeedTracker.getPreviousTracker(dirPath, this.locale);
+                }
+            },
+            /**
+             * Get the values for all field as an array
+             *
+             * @param {dw.catalog.Product} product The product to export
+             * @returns {Array} An array with the defined values
+             */
+            getProductFields : function(product : dw.catalog.Product){
+                var socialCategory = this.socialCategory;
+                var googleShoppingCategories = this.googleShoppingCategories;
+                result = [];
+                for each(var field : String in this.fields){
+                    var f = this.fieldCache[field];
+                    var data = ProductFieldMapper.getField(product, f.attribute, f.format, f.sep, f.type, f.sep2, f.postProcess, f.attributes, socialCategory, googleShoppingCategories);
+                    if (data instanceof Array) {
+                        if (socialCategory.toUpperCase() !== SOCIAL_CHANNEL_INSTAGRAM) {
+                            data = data.map(function(dataValue) {
+                                return !empty(dataValue) ? dataValue.toString().replace(/[\r\n|\n]/g, ' ') : '';
+                            });
+                        }
+                        result = result.concat(data);
+                    } else {
+                        if (socialCategory.toUpperCase() !== SOCIAL_CHANNEL_INSTAGRAM) {
+                            data = !empty(data) ? data.toString().replace(/[\r\n|\n]/g, ' ') : '';
+                        }
+                        result.push(data);
+                    }
+                }
+                return result;
+            },
+            getLocalizedAttributeValue : function (product : dw.catalog.Product){
+                var tmpl : dw.util.Template = new dw.util.Template('localizedproduct', this.locale),
+                    dict : dw.util.Map = new dw.util.HashMap();
+                dict.put('p', product);
+                dict.put('t', this);
+                var content : dw.value.MimeEncodedText = tmpl.render(dict);
+                return this.socialCategory.toUpperCase() !== SOCIAL_CHANNEL_INSTAGRAM
+                    ? content.getText().trim().split(this.separator)
+                    : content.getText().split(this.separator);
+            },
+            exportProduct : function (product : dw.catalog.Product, locales, socialCategory){
+                var line;
+                if (this.shouldExportProduct(product, locales, this.getPrice(product), socialCategory)) {
+                    if (this.locale && this.locale !== dw.system.Site.getCurrent().defaultLocale) {
+                        line = this.getLocalizedAttributeValue(product);
+                    } else {
+                        line = this.getProductFields(product);
+                    }
+                    this.writer.writeNext(line);
+                }
+            },
+            beginExport : function() {
+                this.writer.writeNext(this.getHeader());
+            },
+            endExport: function (params) {
+                this.writer.close();
+                this.fileWriter.close();
+
+                if (this.file && typeof this.file !== 'undefined') {
+                    var deleteFile = false;
+
+                    // if social channel is Snapchat/Instagram, don't post empty files
+                    if (this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_SNAPCHAT
+                        || this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_INSTAGRAM) {
+                        const FileReader = require('dw/io/FileReader');
+                        const reader = new FileReader(this.file);
+                        var line;
+                        var lineCount = 0;
+                        while ((reader.readLine()) != null && lineCount < 2) {
+                            lineCount++;
+                        }
+                        reader.close();
+                        if (lineCount <= 1) {
+                            deleteFile = true;
+                        }
+                    }
+
+                    if (deleteFile) {
+                        try {
+                            this.file.remove();
+                            Logger.debug('file was empty, deleted temp file {0}', this.file.name);
+                        } catch (e) {
+                            Logger.error(e.toString() + ' in ' + e.fileName + ':' + e.lineNumber);
+                        }
+                    } else {
+                        var fileFinalName = this.file.getFullPath();
+                        var n = fileFinalName.lastIndexOf("/TEMP_");
+                        fileFinalName = fileFinalName.substring(0,n) + fileFinalName.substring(n).replace("/TEMP_","/");
+                        var filePath = fileFinalName.substring(0,n);
+
+                        var newFile = new File(fileFinalName);
+                        this.file.renameTo(newFile);
+
+                        this.generatedFiles.push(fileFinalName);
+                        if (this.socialCategory.toUpperCase() === SOCIAL_CHANNEL_INSTAGRAM) {
+                            fileHelpers.addFileNameToTrackingFile(filePath, fileFinalName.substring(n).replace("/",""))
+                        }
+                    }
+                }
+
+                if (params && params.error && this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_INSTAGRAM) {
+                    throw new Error(StringUtils.format('The Category Specific Export {0} specified on CustomObjectId could not be used', this.exportCategoryId));
+                }
+            },
+            handlePostExportSteps: function() {
+                var fileGenereated = false;
+                var dirPath = this.file.getFullPath().split('').join(''); //make copy of the string
+                dirPath = dirPath.slice(0, dirPath.lastIndexOf('/'));
+                if(this.generateDeleteFeed || (this.deltaCatalogInDays && this.deltaCatalogInDays > 0)) {
+                    //save tracker into a file
+                    var result = FeedTracker.storeTrackerDataToFile(this.tracker, dirPath, this.locale);
+
+                    //generate delete file
+                    if(result && this.generateDeleteFeed) {
+                        fileGenereated = FeedTracker.generateDeleteFile(this.tracker, dirPath);
+                        //tiktok need an empty file for delete
+                        if(!fileGenereated && this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_TIKTOK){
+                            fileGenereated = FeedTracker.createDeleteFile(result = [], dirPath);
+                        }
+                    }
+                }
+
+                FeedTracker.trackJobRun(dirPath, fileGenereated, this.deltaCatalogInDays > 0);
+            },
+            exportStoreTransaction : function (transactionDeatils) {
+                let transactionTime = this.getTransactionTime();
+                let transactionExecutionTime = new Date(transactionDeatils.timestamp);
+                if (!empty(transactionTime) && transactionExecutionTime < transactionTime) {
+                    return '';
+                } else {
+                    this.writer.writeNext(this.getStoreTransactionDetailsField(transactionDeatils));
+                }
+            },
+            getStoreTransaction : function (transactionDeatils , field : String, format : String) {
+                // no field, can't do anything
+                if(empty(field) || transactionDeatils == null){
+                    return '';
+                }
+                try {
+                    field = field.indexOf('transactionTime') > -1 ? field.split('|')[0] : field;
+                    let result = transactionDeatils[field];
+                    return result;
+                } catch(e) {
+                    Logger.error('Error occured while mapping field {0} for customer profile {1}', field, transactionDeatils.customerNo);
+                }
+                return null;
+            },
+            getTransactionTime : function () {
+                let length  = this.fields.length;
+                let transactionTime = null;
+                if (length > 0){
+                    let lastField = this.fields[length-1];
+                    let transactionAttribute = this.fieldCache[lastField].attribute;
+                    transactionAttribute = transactionAttribute.split('|');
+                    try {
+                        let regEx= /[-]/g;
+                        transactionTime = transactionAttribute.length > 1 ? new Date(transactionAttribute[1].replace(regEx, '/')) : null;
+                    } catch (e) {
+                        return null;
+                    }
+                }
+                return transactionTime;
+            },
+            getPrice : function (product) {
+                let googleChannel = this.socialCategory && this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_GOOGLE;
+                let isLocaleSet = true;
+
+                if (googleChannel) {
+                   isLocaleSet = CustomSocialFeedsHelper.setSessionForLocale(this.locale);
+                   ProductFieldMapper.setCurrentLocale(this.locale);
+                }
+
+                let price = isLocaleSet ? ProductFieldMapper.getField(product, 'price') : null;
+                return price;
+            },
+            getHeader: function() {
+                var header = this.header.length > 0 ? this.header : [];
+                var allIndex = header.indexOf('all');
+
+                if (allIndex >= 0) {
+                    var products : SeekableIterator = ProductMgr.queryAllSiteProducts();
+                    var product : Product = products.next();
+                    var allCustomAttributesKeys = ProductFieldMapper.getAllCustomAttributesDefinitions(product);
+                    if (allCustomAttributesKeys.length == 0) {
+                        return this.header;
+                    } else {
+                        header = this.header.slice(0, allIndex).concat(allCustomAttributesKeys, this.header.slice(allIndex));
+                        header.splice(header.indexOf('all'), 1);
+                        return header;
+                    }
+                }
+                return this.header;
+            }
+        });
+
+if(typeof exports !== 'undefined') {
+    exports.CSVExportHandler = CSVExportHandler;
+}

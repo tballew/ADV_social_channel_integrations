@@ -1,0 +1,38 @@
+<h3 class="slds-title slds-col">Product Feeds</h3>
+<div class="slds-col slds-button-row" role="group">
+    <button class="slds-button slds-button--addfeed slds-button_neutral" id="addfeedbutton" title="Add Feed">
+        <svg class="slds-icon slds-icon_small slds-icon-text-success" aria-hidden="true">
+            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#new')}"></use>
+        </svg> &nbsp;
+        Add Feed
+    </button>
+    <button class="slds-button slds-button_neutral" id="removefeedbutton" title="Remove Feed">
+        <svg class="slds-icon slds-icon_small slds-icon-text-error" aria-hidden="true">
+            <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#ban')}"></use>
+        </svg> &nbsp;
+        Remove Feed
+    </button>
+</div>
+<table class="slds-table slds-table_cell-buffer slds-table_bordered">
+    <thead>
+        <tr class="slds-line-height_reset">
+            <th class="product_feeds-list" scope="col">
+                <div class="slds-truncate" title="Opportunity Name">Feeds</div>
+            </th>
+        </tr>
+    </thead>
+</table>
+<div class="productsocial-feed-list-content">
+    <table class="slds-table slds-table_cell-buffer slds-table_bordered" id="productsocial-feed-list"
+        aria-label="List of product feeds">
+        <thead style="display: none;">
+            <tr class="slds-line-height_reset">
+                <th class="product_feeds-list" scope="col">
+                    <div class="slds-truncate" title="Opportunity Name">Feeds</div>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>

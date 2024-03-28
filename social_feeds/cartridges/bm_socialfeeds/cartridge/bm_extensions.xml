@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<extensions xmlns="http://www.demandware.com/xml/bmmodules/2007-12-11"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.demandware.com/xml/bmmodules/2007-12-11 bmext.xsd">
+	<!-- =============================================================== -->
+	<!-- ==                                                           == -->
+	<!-- == ADMINISTRATION MENU EXTENSIONS                            == -->
+	<!-- ==                                                           == -->
+	<!-- =============================================================== -->
+	<menuitem id="custom-integration" position="99999" site="false">
+		<name xml:lang="x-default">Social Product Feeds</name>
+		<short_description xml:lang="x-default">
+			Here you can find your Social Product Feeds related extensions.
+		</short_description>
+		<description xml:lang="x-default">
+			Here you can find your Social Product Feeds related extensions.
+		</description>
+		<icon>icons/integration_ico.gif</icon>
+	</menuitem>
+	<menuaction id="customfeeds" menupath="custom-integration"
+		position="100" site="false">
+		<name xml:lang="x-default">Social Product Feeds Definition</name>
+		<short_description xml:lang="x-default">
+			Click here to configure your Social Product Feeds.
+		</short_description>
+		<description xml:lang="x-default">
+			Here you can configure your Social Product Feeds.
+		</description>
+		<!-- no icon specified -->
+		<exec pipeline="BMCustomFeeds" node="Start" />
+		<sub-pipelines>
+			<pipeline name="BMCustomFeeds-Start" />
+			<pipeline name="BMCustomFeeds-Preview" />
+			<pipeline name="BMCustomFeeds-GetAllSites" />
+			<pipeline name="BMCustomFeeds-ProductDeeplink" />
+			<pipeline name="ObjectStore-ReadObjects" />
+			<pipeline name="ObjectStore-SaveObject" />
+			<pipeline name="ObjectStore-CreateObject" />
+			<pipeline name="ObjectStore-DeleteObject" />
+		</sub-pipelines>
+		<parameters>
+			<parameter name="menuname" value="Custom Feeds" />
+			<parameter name="mainmenuname" value="Integration" />
+		</parameters>
+		<icon>icons/custom_feeds_ico.gif</icon>
+	</menuaction>
+</extensions>

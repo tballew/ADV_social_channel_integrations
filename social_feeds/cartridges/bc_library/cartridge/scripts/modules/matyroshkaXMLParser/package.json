@@ -1,0 +1,8 @@
+{
+  "name": "Matyroshka XML Parser Framework",
+  "version": "1.0.0",
+  "author": "Robert Pemsel",
+  "description": "This is a XML Parser framework designed to help parsing huge XML files which cannot be processed by simply calling getXMLObject for the root node. ",
+  "contributors": [],
+  "main": "../martini/Martini.js"
+}

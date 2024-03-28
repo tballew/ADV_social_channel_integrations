@@ -1,0 +1,91 @@
+{
+    "nextDeltaToken": "@deJwdj11PwjAYhf/L4qWlHftkN2YMQxZQnM7EC5KldC+lMtqlfVmCxv9u9facnHOe8x2M3PKLC4ogTAojVDcYEe51cB/gbQQvb3dV2da75+7x42X32nqjhwF5a86gvT0ofS5OiKMrKHXHXhBGzOETBDoyWtPPvsCaQckTaqXlTJgLnebUgZ2UAEc5OuUoguYapTXX0VHGoiiKGSNZzDISh5kgiwOLSB4nx3wBIOZ5THuOnG6N4KiMrvUEGo29lVJakBzh4e4fEv8g91ff2G+271P31qyfmrKsZFOvl8tVZVabW+MfCQs+1Lfq4h+HaZpkSeqH0zj/+QWWG18e",
+    "shouldQueryAgain": false,
+    "records": [
+        {
+            "sku": "883360544045M",
+            "id": "oci_loc1",
+            "deltaType": "Change",
+            "onHand": 384.0,
+            "atf": 371.0,
+            "ato": 474.0,
+            "reserved": 0,
+            "safetyStockCount": 13.0,
+            "futures": [
+                {
+                    "quantity": 103.0,
+                    "expectedDate": "2022-10-23T22:06:02.901Z"
+                }
+            ],
+            "effectiveDate": "2022-10-13T22:06:02.901Z"
+        },
+        {
+            "sku": "883360544045M",
+            "id": "oci_loc1",
+            "deltaType": "Change",
+            "onHand": 407.0,
+            "atf": 395.0,
+            "ato": 863.0,
+            "reserved": 0,
+            "safetyStockCount": 12.0,
+            "futures": [
+                {
+                    "quantity": 468.0,
+                    "expectedDate": "2022-10-23T22:10:10.827Z"
+                }
+            ],
+            "effectiveDate": "2022-10-13T22:10:10.827Z"
+        },
+        {
+            "sku": "883360544045M",
+            "id": "oci_loc1",
+            "deltaType": "Change",
+            "onHand": 391.0,
+            "atf": 384.0,
+            "ato": 476.0,
+            "reserved": 0,
+            "safetyStockCount": 7.0,
+            "futures": [
+                {
+                    "quantity": 92.0,
+                    "expectedDate": "2022-10-23T22:11:42.848Z"
+                }
+            ],
+            "effectiveDate": "2022-10-13T22:11:42.848Z"
+        },
+        {
+            "sku": "883360544045M",
+            "id": "oci_loc1",
+            "deltaType": "Change",
+            "onHand": 305.0,
+            "atf": 289.0,
+            "ato": 479.0,
+            "reserved": 0,
+            "safetyStockCount": 16.0,
+            "futures": [
+                {
+                    "quantity": 190.0,
+                    "expectedDate": "2022-10-23T22:12:00.221Z"
+                }
+            ],
+            "effectiveDate": "2022-10-13T22:12:00.221Z"
+        },
+        {
+            "sku": "883360544045M",
+            "id": "oci_loc1",
+            "deltaType": "Change",
+            "onHand": 182.0,
+            "atf": 171.0,
+            "ato": 314.0,
+            "reserved": 0,
+            "safetyStockCount": 11.0,
+            "futures": [
+                {
+                    "quantity": 143.0,
+                    "expectedDate": "2022-10-23T22:12:51.825Z"
+                }
+            ],
+            "effectiveDate": "2022-10-13T22:12:51.825Z"
+        }
+    ]
+}

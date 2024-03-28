@@ -1,0 +1,55 @@
+
+
+var Collections = require('bc_library/cartridge/scripts/util/Collections.ds').Collections;
+var HashMap = require('dw/util').HashMap;
+var ArrayList = require('dw/util').ArrayList;
+var Logger = require('dw/system').Logger;
+
+var PubSub = function() {
+    this.observers = new HashMap();
+};
+
+PubSub.prototype.on = function(event, handler, context) {
+    if (!this.observers.containsKey(event)) {
+        this.observers.put(event, new ArrayList({handler : handler, context : context}));
+    } else {
+        this.observers.get(event).add({handler : handler, context: context});
+    }
+};
+
+PubSub.prototype.off = function(event, handler) {
+    if (this.observers.containsKey(event)) {
+        var handlers = this.observers.get(event),
+        toRemove = null;
+
+        Collections.each(handlers, function(element) {
+            if (element.handler === handler) {
+                toRemove = element;
+            }
+        });
+
+        if (!empty(toRemove)) {
+            handlers.remove(toRemove);
+        }
+    }
+};
+
+PubSub.prototype.fireEvent = function(event, data) {
+    if (this.observers.containsKey(event)) {
+        var handlers = this.observers.get(event);
+
+        Collections.each(handlers, function(handler) {
+
+            if (!empty(handler.context)) {
+                handler.handler.call(handler.context, event, data);
+            } else {
+                handler.handler(event, data);
+            }
+
+        });
+    }
+};
+
+if (typeof (exports) !== 'undefined') {
+    exports.PubSub = PubSub;
+}

@@ -1,0 +1,233 @@
+importPackage( dw.system );
+importPackage( dw.catalog );
+importPackage( dw.util );
+
+importScript( 'export/handlers/AbstractExportHandler.ds' );
+
+// Hack, because vars cannot be imported in DW, only functions
+function getCatalogExportMgr() {
+    return CatalogExportMgr;
+}
+
+/**
+ * Create a CatalogExportmanager instance to export the catalog.
+ *
+ * Register new handlers by calling registerExportHandler(handler).
+ */
+function CatalogExportMgr(ExecutionContexts){
+    this.logger = dw.system.Logger.getLogger('GlobalFeedExport', 'GlobalFeedExport');
+    this.exportMasters = false;
+    this.exportProducts = false;
+    this.exportCategories = false;
+    this.exportProductCategoryAssignments = false;
+    this.handlers = [];
+    this.statistics = {
+            categories : 0,
+            products : 0,
+            masters: 0,
+            categoryAssignments : 0
+    };
+    this.executionContexts = ExecutionContexts;
+    this.productSearchModel = new ProductSearchModel();
+}
+
+
+CatalogExportMgr.prototype = {
+        /**
+         * Registers a new export handler which needs to be a subclass of
+         * {@link AbstractExportHandler}.
+         */
+        registerExportHandler : function(handler){
+            this.handlers.push(handler);
+            this.exportMasters                    = this.exportMasters || handler.handlesMasters;
+            this.exportProducts                   = this.exportProducts || handler.handlesProducts;
+            this.exportCategories                 = this.exportCategories || handler.handlesCategories;
+            this.exportProductCategoryAssignments = this.exportProductCategoryAssignments || handler.handlesCategoryAssignments;
+        },
+        /**
+         * Runs the export and notifies all registered handlers for all
+         * products, catagories etc.
+         */
+        runExport : function(){
+            this.handleBeginExport();
+            var categoryId;
+            if(this.executionContexts && this.executionContexts.co && this.executionContexts.co.custom.exportCategoryId) {
+                categoryId = this.executionContexts.co.custom.exportCategoryId;
+            }
+            var selectedCategory = 'root'; //default to root
+            if(categoryId && categoryId !== '') {
+                selectedCategory = CatalogMgr.getCategory(categoryId);
+                if (!selectedCategory || (selectedCategory && !selectedCategory.online) ) {
+                    this.logger.error('Category ' + (selectedCategory ? selectedCategory : categoryId) + ' is not found or is not online, check if a catalog is assigned to the current storefront site');
+                    this.handleEndExport({ error: true });
+                    return;
+                }
+            }
+            if (selectedCategory === 'root') {
+                selectedCategory = CatalogMgr.getSiteCatalog().getRoot();
+            }
+
+            this.handleCategories(selectedCategory);
+
+            // We should iterate all products not relative to each category
+            // because product can be assigned to more than 1 category and then
+            // duplication appear
+            if (this.exportMasters || this.exportProducts) {
+                this.handleProducts(selectedCategory)
+            };
+            this.handleEndExport();
+
+            this.handlePostExportSteps();
+        },
+        handleCategories : function(category : Category){
+            if (category == null || !category.isOnline()) {
+                return;
+            }
+            if (this.exportCategories) { this.handleCategory(category) };
+            if (this.exportProductCategoryAssignments) { this.handleProductCategoryAssignments(category) };
+            for each (var cat in category.subCategories){
+                this.handleCategories(cat);
+            }
+        },
+
+        handleProducts : function(category : Category) {
+            // do search and handle products (and assignements)
+            // when we encounter a new master we call handleMaster
+
+            if (category.ID !== 'root') {
+                var productSearch = this.productSearchModel;
+                var searchHits;
+                var product;
+                productSearch.setCategoryID(category.ID);
+                productSearch.setRecursiveCategorySearch(true);
+                productSearch.search();
+
+                this.logger.info('Handle '+ productSearch.getCount() +' products.' );
+
+                searchHits = productSearch.getProductSearchHits();
+                while (searchHits.hasNext()) {
+                    product = searchHits.next().getProduct();
+                    if (!empty(product)) {
+                        if (this.exportMasters && product.master) {
+                            this.handleMaster(product);
+                        } else if (this.exportProducts
+                                    && !product.master
+                                    && !product.variationGroup
+                                    && !product.productSet) {
+                            this.handleProduct(product);
+                        }
+                        
+                        if (this.exportProducts && product.master) {
+                            //Iterate through variations and export them
+                            var variants = product.getVariants();
+                            for each(var v in variants) {
+                                this.handleProduct(v);
+                            }
+                        }
+                    }
+                }
+            } else {
+                var products : SeekableIterator = ProductMgr.queryAllSiteProducts();
+
+                this.logger.info('Handle '+ products.count +' products.' );
+
+                while (products.hasNext()) {
+                    var product : Product = products.next();
+                    if (this.exportMasters && product.master){
+                        this.handleMaster(product);
+                    } else if(this.exportProducts 
+                                && !product.master
+                                && !product.variationGroup
+                                && !product.productSet) {
+                        this.handleProduct(product);
+                    }
+                }
+            }
+        },
+
+        /**
+         * Handles a model (called once per model)
+         *
+         * @param {dw.catalog.Product} master The master representing the model
+         */
+        handleMaster : function(master : Product) {
+            for each (var handler in this.handlers) {
+                handler.exportMaster(master,  handler.locales);
+                // delete handler;
+                handler = null;
+            };
+            this.statistics.masters++;
+        },
+
+        /**
+         * Handles product
+         *
+         * @param {dw.catalog.Product} product
+         */
+        handleProduct : function(product : Product){
+            for each (var handler in this.handlers) {
+                handler.exportProduct(product, handler.locales, handler.socialCategory);
+                // delete handler;
+                handler = null;
+            }
+            this.statistics.products++;
+        },
+
+        /**
+         * Handles a category
+         *
+         * @param {dw.catalog.Category} category
+         */
+        handleCategory : function(category : Category){
+            for each (var handler in this.handlers) {
+                handler.exportCategory(category);
+                // delete handler;
+                handler = null;
+            }
+            this.statistics.categories++;
+        },
+
+        /**
+         * Handles category assignments
+         *
+         * @param {dw.catalog.Category} category
+         */
+        handleProductCategoryAssignments : function(category : Category){
+
+            // TODO write functional for this function
+            /*
+             * this.handlers.forEach(function(handler){
+             * handler.exportCategoryAssignments(pca); });
+             */
+            this.statistics.categoryAssignments++;
+        },
+
+        handleBeginExport: function(){
+            for each (var handler in this.handlers) {
+                handler.beginExport();
+                // delete handler;
+                handler = null;
+            }
+        },
+        handleEndExport: function(params){
+            for each (var handler in this.handlers) {
+                handler.endExport(params);
+                // delete handler;
+                handler = null;
+            }
+            var msg = 'Export done (categories processed: '+this.statistics.categories+', masters processed: '+this.statistics.masters+', products processed: '+this.statistics.products+')'
+            this.logger.info(msg);
+        },
+        handlePostExportSteps: function(){
+            for each (var handler in this.handlers) {
+                handler.handlePostExportSteps();
+                // delete handler;
+                handler = null;
+            }
+        }
+}
+
+if(typeof exports !== 'undefined')
+{
+	module.exports = CatalogExportMgr;
+}

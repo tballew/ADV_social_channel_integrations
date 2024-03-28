@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomMetadata xmlns="http://soap.sforce.com/2006/04/metadata" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+    <label>Test Class</label>
+    <protected>false</protected>
+    <values>
+        <field>API_Version__c</field>
+        <value xsi:type="xsd:string">10</value>
+    </values>
+    <values>
+        <field>Order_Status_Endpoint__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>Site_Id__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>accesskey__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>client_credential__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>client_id__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>endpoint__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>grant_type__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+    <values>
+        <field>username__c</field>
+        <value xsi:type="xsd:string">Test</value>
+    </values>
+</CustomMetadata>

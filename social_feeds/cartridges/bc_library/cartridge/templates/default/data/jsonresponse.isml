@@ -1,0 +1,10 @@
+<iscontent type="application/json" charset="UTF-8" compact="true"/>
+<iscomment>
+	Empty template for emails that don't need body or other purposes.
+</iscomment>
+
+<isif condition="${!empty(pdict.ResponseObject)}">
+	<isprint value="${JSON.stringify(pdict.ResponseObject)}" encoding="off">
+<iselse>
+	{}
+</isif>

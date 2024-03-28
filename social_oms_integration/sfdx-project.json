@@ -1,0 +1,29 @@
+{
+  "packageDirectories": [
+    {
+      "path": "force-app",
+      "default": true,
+      "package": "Social Integration Package",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "versionDescription": ""
+    },
+    {
+      "path": "force-app",
+      "package": "Social Integration Package - Unlocked",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "default": false,
+      "versionDescription": ""
+    }
+  ],
+  "name": "OrderStatusExport",
+  "namespace": "social_int",
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "54.0",
+  "packageAliases": {
+    "Social Integration Package": "0HoHu000000TND1KAO",
+    "Social Integration Package - Unlocked": "0HoHu000000TND6KAO",
+    "Social Integration Package - Unlocked@0.1.0-1": "04tHu000003NpdfIAC"
+  }
+}

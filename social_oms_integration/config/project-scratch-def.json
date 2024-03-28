@@ -1,0 +1,51 @@
+{
+  "orgName": "Social Commerce",
+  "edition": "Developer",
+  "features": [
+    "EnableSetPasswordInApi", 
+    "Communities",
+    "B2BCommerce", 
+    "OrderManagement",
+    "MarketingUser",
+    "B2CCommerceGMV",
+    "PersonAccounts"
+  ],
+  "settings": {
+    "lightningExperienceSettings": {
+      "enableS1DesktopEnabled": true
+    },
+    "mobileSettings": {
+      "enableS1EncryptedStoragePref2": false
+    },
+    "languageSettings": {
+      "enableTranslationWorkbench": true,
+      "enableEndUserLanguages": true,
+      "enablePlatformLanguages": true
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true,
+      "enableOotbProfExtUserOpsEnable": true
+    },
+    "orderManagementSettings": {
+      "enableOrderManagement": true
+    },
+    "orderSettings": {
+      "enableOrders": true,
+      "enableEnhancedCommerceOrders": true,
+      "enableOptionalPricebook": true
+    },
+    "commerceSettings": {
+      "commerceEnabled": true
+    },
+    "pathAssistantSettings":{
+        "pathAssistantEnabled": true
+    },
+    "apexSettings": {
+      "enableApexApprovalLockUnlock": true
+    }
+  },
+  "language": "en_US"
+}

@@ -1,0 +1,171 @@
+/**
+ * Demandware Script File
+ */
+importPackage( dw.system );
+importPackage( dw.io );
+importScript( 'export/handlers/AbstractExportHandler.ds' );
+importScript( 'export/ProductFieldMapper.ds' );
+
+var StringUtils = require('dw/util/StringUtils');
+var fileHelpers = require('*/cartridge/scripts/social/helpers/fileHelpers');
+
+const SOCIAL_CHANNEL_GOOGLE = 'SOCIALCHANNELGOOGLE';
+const SOCIAL_CHANNEL_INSTAGRAM = 'SOCIALCHANNELINSTAGRAM';
+const SOCIAL_CHANNEL_SNAPCHAT = 'SOCIALCHANNELSNAPCHAT';
+const SOCIAL_CHANNEL_TIKTOK = 'SOCIALCHANNELTIKTOK';
+
+// Hack, because vars cannot be imported in DW, only functions
+function getTemplateExportHandler() {
+    return TemplateExportHandler;
+}
+var AbstractExportHandler = getAbstractExportHandler();
+
+/**
+ * @augments AbstractExportHandler
+ */
+var TemplateExportHandler = AbstractExportHandler.extend(
+        /** @lends TemplateExportHandler.prototype */
+        {
+            /**
+             * Creates a new template handler instance. The template must define
+             * a block of type product|profile|order and within that block
+             * certain variables can be used to access product|profile|order
+             * attributes
+             */
+
+            init : function(
+                writer : Writer,
+                template : String,
+                contextObject : String,
+                includeOfflineProducts : Boolean,
+                includeOutOfStockProducts : Boolean,
+                includeNoPriceProducts : Boolean,
+                includeSearchableIfUnavailableProducts: Boolean,
+                socialCategory: String,
+                googleShoppingCategories : String,
+                hostName: String,
+                file : File,
+                locale,
+                locales,
+                localizedCategories,
+                deltaCatalogInDays,
+                exportCategoryId,
+                generatedFiles : Array
+            ) {
+                this.handlesProducts = true;
+                this.writer = writer;
+                this.template = template;
+                this.contextObject = contextObject;
+                this.includeOfflineProducts = includeOfflineProducts;
+                this.includeOutOfStockProducts = includeOutOfStockProducts;
+                this.includeNoPriceProducts = includeNoPriceProducts;
+                this.includeSearchableIfUnavailableProducts = includeSearchableIfUnavailableProducts;
+                this.socialCategory = socialCategory,
+                this.googleShoppingCategories = googleShoppingCategories,
+                this.hostName = hostName || null;
+                this.locale = locale;
+                this.file = file;
+                this.locales = locales;
+                this.localizedCategories = localizedCategories;
+                this.deltaCatalogInDays = deltaCatalogInDays;
+                this.exportCategoryId = exportCategoryId;
+
+                 this.generatedFiles = generatedFiles;
+
+                this.handlesMasters = false;
+                this.handlesProducts = true;
+
+                if('Catalog' === contextObject) {
+                    if(template.indexOf('{{block type="product"}}') < 0 || template.indexOf('{{/block}}') < 0){
+                        throw new Error('Invalid template provided, a block of type *product* is mandatory!');
+                    }
+
+                    this.header = template.split('{{block type="product"}}')[0];
+                    this.footer = template.split('{{/block}}')[1];
+                    this.processedTemplate = template.split('{{block type="product"}}')[1].split('{{/block}}')[0];
+                    this.initProductFieldCache();
+                    if (locale) {
+                        ProductFieldMapper.setCurrentLocale(locale);
+                    }
+                }
+            },
+            /**
+             * Initialize the a field cache to avoid parsing the expressions for
+             * every product
+             */
+            initProductFieldCache :function(){
+                this.fieldCache = {};
+                // parse the template and populate the field cache once to avoid
+                // parsing the template for each product
+                _that = this;
+                this.processedTemplate.replace(/\{\{[^}]*\}\}/g,function(a : String){
+                    _that.fieldCache[a] = ProductFieldMapper.parseField(a);
+                    return "";
+                });
+            },
+            exportProduct : function (product : dw.catalog.Product, locales){
+                if (this.shouldExportProduct(product, locales)) {
+                    _that = this;
+                    this.writer.write(this.processedTemplate.replace(/\{\{[^}]*\}\}/g, function(a : String){
+                        return ProductFieldMapper.getField(product,_that.fieldCache[a].attribute, _that.fieldCache[a].format, _that.fieldCache[a].sep, _that.fieldCache[a].type, _that.fieldCache[a].sep2, _that.fieldCache[a].postProcess, _that.fieldCache[a].attributes, this.socialCategory, this.googleShoppingCategories) || '';
+                    })+'\n');
+                }
+            },
+            beginExport : function() {
+                this.writer.write(this.header.replace(/\{\{[^}]*\}\}/g, function(a : String){ return ProductFieldMapper.parseAdditionData(a); }) + '\n');
+            },
+            endExport: function (params) {
+                this.writer.write(this.footer.replace(/\{\{[^}]*\}\}/g, function(a : String){ return ProductFieldMapper.parseAdditionData(a); }) + '\n');
+                this.writer.close();
+
+                if (typeof this.file !== 'undefined') {
+                    var deleteFile = false;
+
+                    // if social channel is Snapchat/Instagram, don't post empty files
+                    if (this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_SNAPCHAT
+                        || this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_INSTAGRAM) {
+                        const FileReader = require('dw/io/FileReader');
+                        const reader = new FileReader(this.file);
+                        var line;
+                        var lineCount = 0;
+                        while ((reader.readLine()) != null && lineCount < 2) {
+                            lineCount++;
+                        }
+                        reader.close();
+                        if (lineCount <= 1) {
+                            deleteFile = true;
+                        }
+                    }
+
+                    if (deleteFile) {
+                        try {
+                            this.file.remove();
+                            Logger.debug('file was empty, deleted temp file {0}', this.file.name);
+                        } catch (e) {
+                            Logger.error(e.toString() + ' in ' + e.fileName + ':' + e.lineNumber);
+                        }
+                    } else {
+                        var fileFinalName = this.file.getFullPath();
+                        var n = fileFinalName.lastIndexOf("/TEMP_");
+                        fileFinalName = fileFinalName.substring(0,n) + fileFinalName.substring(n).replace("/TEMP_","/");
+                        var filePath = fileFinalName.substring(0,n);
+
+                        var newFile = new File(fileFinalName);
+                        this.file.renameTo(newFile);
+
+                        this.generatedFiles.push(fileFinalName);
+                        if (this.socialCategory.toUpperCase() === SOCIAL_CHANNEL_INSTAGRAM) {
+                            fileHelpers.addFileNameToTrackingFile(filePath, fileFinalName.substring(n).replace("/",""))
+                        }
+                    }
+                }
+
+                if (params && params.error && this.socialCategory.toUpperCase() == SOCIAL_CHANNEL_INSTAGRAM) {
+                    throw new Error(StringUtils.format('The Category Specific Export {0} specified on CustomObjectId could not be used', this.exportCategoryId));
+                }
+            }
+        });
+
+if(typeof exports !== 'undefined') {
+    exports.TemplateExportHandler = TemplateExportHandler;
+}

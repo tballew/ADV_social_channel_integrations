@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>carrier_map_exception_message</fullName>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>carrier map exception message</shortDescription>
+        <value>Carrier mapping not found.</value>
+    </labels>
+</CustomLabels>

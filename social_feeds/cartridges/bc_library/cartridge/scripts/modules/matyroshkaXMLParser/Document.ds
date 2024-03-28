@@ -1,0 +1,333 @@
+
+require('dw/util');
+require('dw/system');
+require('dw/io');
+var Logger = require('dw/system').Logger.getLogger('matryoshka');
+
+var ArrayList = require('dw/util').ArrayList;
+var HashMap = require('dw/util').HashMap;
+var Class = require('bc_library/cartridge/scripts/object-handling/libInheritance.ds').Class;
+var Collections = require('bc_library/cartridge/scripts/util/Collections.ds').Collections;
+var PubSub = require('bc_library/cartridge/scripts/system/PubSub.ds').PubSub;
+
+
+/**
+*
+* @class Document
+*
+*
+*/
+var Document = Class.extend({
+	/**
+	* constructor method called when creating instances of Document
+	*
+	* @constructs
+	* @public
+	* @memberof Document
+	* @instance
+	*/
+	init: function () {
+		this.startElementEventHandlers = new ArrayList();
+		this.attributeEventHandlers = new ArrayList();
+		this.namespaceEventHandlers = new ArrayList();
+		this.endElementEventHandlers = new ArrayList();
+		this.charactersEventHandlers = new ArrayList();
+		this.cdataEventHandlers = new ArrayList();
+		this.commentEventHandlers = new ArrayList();
+		this.spaceEventHandlers = new ArrayList();
+		this.startDocumentEventHandlers = new ArrayList();
+		this.endDocumentEventHandlers = new ArrayList();
+		this.processingInstructionEventHandlers = new ArrayList();
+		this.entityReferenceEventHandlers = new ArrayList();
+		this.DTDReferenceEventHandlers = new ArrayList();
+
+		this.registeredParser = new ArrayList ();
+		this.objectCache = new HashMap();
+		this.messageQueue = new PubSub();
+	},
+
+	/**
+	* Registers a XML Fragment Parser to this document.
+	*
+	* @public
+	* @memberof Document
+	* @instance
+	*
+	* @param {XMLFragmentParser} parser - XML Fragment parser to add
+	*/
+	registerFragmentParser : function (parser) {
+		this.registeredParser.add(parser);
+
+		parser.document = this;
+		parser.addedToDocument();
+		parser.recursivelySetDocument(this);
+
+		this.addEventHandlers(parser.parseEventHandlers);
+	},
+
+	/**
+    * Adds XML Parser Event Handlers to the document. This method is called internally from XML Fragment Parsers
+    * No need to call this method in custom code
+    *
+	* @public
+	* @memberof Document
+	* @instance
+	*
+	* @param {ArrayList.<DocumentParseEventHandler>} handlers - Parse Event Handlers to add to the document
+	*/
+	addEventHandlers : function (handlers) {
+
+		if (!empty(handlers)) {
+
+			var iterator = handlers.iterator();
+
+			while(iterator.hasNext()) {
+				var element = iterator.next();
+
+				Logger.info('Adding XML handler: ' + element.name);
+
+				switch (element.event) {
+					case XMLStreamConstants.START_ELEMENT :
+						this.startElementEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.ATTRIBUTE :
+						this.attributeEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.NAMESPACE :
+						this.namespaceEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.END_ELEMENT :
+						this.endElementEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.CHARACTERS :
+						this.charactersEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.CDATA :
+						this.cdataEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.COMMENT :
+						this.commentEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.SPACE :
+						this.spaceEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.START_DOCUMENT :
+						this.startDocumentEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.END_DOCUMENT :
+						this.endDocumentEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.PROCESSING_INSTRUCTION	:
+						this.processingInstructionEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.ENTITY_REFERENCE :
+						this.entityReferenceEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+					case XMLStreamConstants.DTD :
+						this.DTDReferenceEventHandlers.add({handler : element.handler, context: element.context, isActive : function () { return element.active; } });
+					break;
+				}
+			}
+
+		}
+
+		return this;
+	},
+
+	/**
+    * Removes XML Fragment parsed from the document. This method is called internally from XML Fragment Parsers
+    * No need to call this method in custom code
+    *
+	* @public
+	* @memberof Document
+	* @instance
+	*
+	* @param {XMLFragmentParser} parser - All parse event handlers of that parser are removed from the Document
+	*/
+	removeEventHandlers : function (parser) {
+		var iterator : Iterator = parser.eventHandlers.iterator();
+
+		while(iterator.hasNext()) {
+			var element = iterator.next();
+
+			Logger.info('removing XML handler: ' + element.name);
+
+			switch (element.event) {
+				case XMLStreamConstants.START_ELEMENT :
+					this.startElementEventHandlers = Collections.filter(this.startElementEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.ATTRIBUTE :
+					this.attributeEventHandlers = Collections.filter(this.attributeEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.NAMESPACE :
+					this.namespaceEventHandlers = Collections.filter(this.namespaceEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.END_ELEMENT :
+					this.endElementEventHandlers = Collections.filter(this.endElementEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.CHARACTERS :
+					this.charactersEventHandlers = Collections.filter(this.charactersEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.CDATA :
+					this.cdataEventHandlers = Collections.filter(this.cdataEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstatns.COMMENT :
+					this.commentEventHandlers = Collections.filter(this.commentEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.SPACE :
+					this.spaceEventHandlers = Collections.filter(this.spaceEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.START_DOCUMENT :
+					this.startDocumentEventHandlers = Collections.filter(this.startDocumentEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.END_DOCUMENT :
+					this.endDocumentEventHandlers = Collections.filter(this.endDocumentEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.PROCESSING_INSTRUCTION	:
+					this.processingInstructionEventHandlers = Collections.filter(this.processingInstructionEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.ENTITY_REFERENCE :
+					this.entityReferenceEventHandlers = Collections.filter(this.entityReferenceEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+				case XMLStreamConstants.DTD :
+					this.DTDReferenceEventHandlers = Collections.filter(this.DTDReferenceEventHandlers, function (object) {
+						return !( object.handler === element.handler );
+					});
+				break;
+			}
+		}
+
+		return this;
+	},
+
+
+	/**
+	* Starts the processing of the Document. All Fragment Parsers should be added prior to calling this method.
+    *
+	* @public
+	* @memberof Document
+	* @instance
+	*
+	* @param {Reader} reader - reference to a reader where a XMLStreamReader is constructed of
+	*/
+	process : function (reader : Reader ) {
+
+		var xmlStreamReader = new XMLStreamReader(reader),
+			event = null;
+
+		/* enable all parsers directly registered at the document */
+		Collections.each(this.registeredParser, function (parser) {
+			parser.parserActivated();
+		});
+
+		while (xmlStreamReader.hasNext()) {
+			event = xmlStreamReader.next();
+
+			switch (event) {
+				case XMLStreamConstants.START_ELEMENT :
+
+					var startEventHandlers = this.startElementEventHandlers;
+
+					Collections.each(this.startElementEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.ATTRIBUTE :
+					Collections.each(this.attributeEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.NAMESPACE :
+					Collections.each(this.namespaceEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.END_ELEMENT :
+					Collections.each(this.endElementEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.CHARACTERS :
+					Collections.each(this.charactersEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.CDATA :
+					Collections.each(this.cdataEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.COMMENT :
+					Collections.each(this.commentEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.SPACE :
+					Collections.each(this.spaceEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.START_DOCUMENT :
+					Collections.each(this.startDocumentEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.END_DOCUMENT :
+					Collections.each(this.endDocumentEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.PROCESSING_INSTRUCTION	:
+					Collections.each(this.processingInstructionEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.ENTITY_REFERENCE :
+					Collections.each(this.entityReferenceEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+				case XMLStreamConstants.DTD :
+					Collections.each(this.DTDReferenceEventHandlers,
+						function (element) { if (element.isActive() === true) { element.handler.call(element.context, event, xmlStreamReader); } },
+						this);
+				break;
+			}
+		}
+
+		Collections.each(this.registeredParser, function (parser) {
+			parser.parserDeactivated();
+		});
+
+	}
+
+});
+
+
+if (typeof(exports) !== 'undefined') {
+	exports.Document = Document;
+}

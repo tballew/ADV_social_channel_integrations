@@ -1,0 +1,223 @@
+<span class="slds-title" id="feed-data-title"></span>
+
+<div class="slds-form-element">
+    <iscomment>
+        In the future we will activate the product picker and the template preview area
+    </iscomment>
+    <iscomment>
+        <div class="slds-form-element__control">
+            <isinclude template="feeds/productPicker.isml"></isinclude>
+        </div>
+    </iscomment>
+
+
+    <div class="slds-grid">
+        <div class="slds-col slds-size_1-of-2">
+            <div class="slds-form-element">
+                <div class="slds-form-element__control">
+                    <table>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="id">ID</label>
+                            </td>
+                            <td>
+                                <input type="text" name="id" id="id" placeholder="- New feed -" required=""
+                                    class="slds-input" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="type">Export
+                                    Format</label>
+                            </td>
+                            <td>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="type" name="type">
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="fileEncoding">File
+                                    Encoding</label>
+                            </td>
+                            <td>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="fileEncoding" name="fileEncoding">
+                                    </select>
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="test-gen-feed-folder-name"> <abbr
+                                        lass="slds-required" title="required">*</abbr> Folder Name</label>
+                            </td>
+                            <td>
+                                <div class="slds-combobox_container">
+                                    <div class="slds-combobox slds-dropdown-trigger slds-dropdown-trigger_click"
+                                        id="folderName">
+                                        <div class="slds-combobox__form-element slds-input-has-icon slds-input-has-icon_right"
+                                            role="none">
+                                            <div role="combobox" tabindex="0"
+                                                class="slds-input_faux slds-combobox__input"
+                                                aria-labelledby="combobox-label-id-263 combobox-id-68-selected-value"
+                                                id="folderName-combobox" aria-expanded="false" aria-haspopup="listbox">
+                                                <input type="text" class="slds-truncate" id="folderName-combobox-value" name="folderName-combobox-value" value=""/>
+
+
+                                            </div>
+                                            <span
+                                                class="slds-icon_container slds-icon-utility-down slds-input__icon slds-input__icon_right">
+                                                <svg class="slds-icon slds-icon slds-icon_x-small slds-icon-text-default"
+                                                    aria-hidden="true">
+                                                    <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#down')}">
+                                                    </use>
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <div class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid"
+                                            id="folderName-dropdown" role="listbox"
+                                            aria-label="{{Placeholder for Dropdown Items}}" tabindex="0"
+                                            aria-busy="false">
+                                            <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="fileName"><abbr lass="slds-required"
+                                        title="required">*</abbr> File Name</label>
+                            </td>
+                            <td>
+                                <input type="text" id="fileName" name="fileName" placeholder="" required=""
+                                    class="slds-input" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="exportCategoryId">Category
+                                    Specific Export</label>
+                            </td>
+                            <td>
+                                <input type="text" id="exportCategoryId" name="exportCategoryId"
+                                    placeholder="Enter root for all products" required="" class="slds-input" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="slds-col slds-size_1-of-2">
+            <div class="slds-form-element">
+                <div class="slds-form-element__control">
+
+                    <table>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="feedContext">Feed Context</label>
+                            </td>
+                            <td>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="feedContext" name="feedContext">
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="socialCategory">Channel
+                                    Type</label>
+                            </td>
+                            <td>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="socialCategory" name="socialCategory">
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label class="slds-form-element__label" for="googleShoppingCategories">Google Shopping
+                                    Category</label>
+                            </td>
+                            <td>
+                                <div class="slds-select_container">
+                                    <select class="slds-select" id="googleShoppingCategories"
+                                        name="googleShoppingCategories">
+                                        <option value=""></option>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="slds-form-element__label">Include Offline Products</span>
+                            </td>
+                            <td>
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="includeOfflineProducts" />
+                                    <label class="slds-checkbox__label" for="includeOfflineProducts">
+                                        <span class="slds-checkbox_faux"></span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="slds-form-element__label">Include Out of Stock Products</span>
+                            </td>
+                            <td>
+                                <div class="slds-checkbox">
+                                    <input type="checkbox" name="options" id="includeOutOfStockProducts" />
+                                    <label class="slds-checkbox__label" for="includeOutOfStockProducts">
+                                        <span class="slds-checkbox_faux"></span>
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <span class="slds-form-element__label">Available for Sites</span>
+                            </td>
+                            <td>
+                                <ul class="slds-checkbox--content" id="assignedSitesContent">
+
+                                </ul>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="slds-form-element__control">
+        <label class="slds-form-element__label" for="configuration"><abbr lass="slds-required" title="required">*</abbr>
+            Template</label>
+        <div class="slds-form-element__control" id="formconfiguration">
+            <textarea id="configuration" name="configuration" placeholder="" class="slds-textarea"></textarea>
+        </div>
+    </div>
+</div>
+
+<div class="slds-form-element">
+    <div class="slds-col slds-button-group-row" role="group">
+        <button class="slds-button slds-button_neutral" id="createfeedbutton" title="Save">
+            <svg class="slds-icon slds-icon_small slds-icon-text-default" aria-hidden="true">
+                <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#save')}"></use>
+            </svg> &nbsp;
+            Save</button>
+        <button class="slds-button slds-button_neutral" id="revertchanges" title="Revert Changes">
+            <svg class="slds-icon slds-icon_small slds-icon-text-error" aria-hidden="true">
+                <use xlink:href="${URLUtils.absStatic('/icons/utility-sprite/svg/symbols.svg#error')}"></use>
+            </svg> &nbsp;
+            Revert Changes</button>
+    </div>
+</div>
