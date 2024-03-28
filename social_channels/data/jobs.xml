@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobs xmlns="http://www.demandware.com/xml/impex/jobs/2015-07-01">
+    <job job-id="TikTok-ExportCatalog" priority="0">
+        <description>Export the product catalog to TikTok</description>
+        <parameters/>
+        <flow>
+            <context site-id="RefArch"/>
+            <step step-id="Export Catalog" type="custom.TikTok.ExportCatalog" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="ProductImageViewType">large</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2021-11-12Z</date>
+                <time>13:11:01.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+</jobs>

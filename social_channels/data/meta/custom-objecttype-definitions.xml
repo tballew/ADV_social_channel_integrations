@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <custom-type type-id="SocialChannels">
+        <display-name xml:lang="x-default">Social Channels</display-name>
+        <staging-mode>source-to-target</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="channel">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="acceptTerms">
+                <display-name xml:lang="x-default">Accept Terms</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="accessToken">
+                <display-name xml:lang="x-default">Access Token</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="advertiserAccount">
+                <display-name xml:lang="x-default">Ad Account</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="advertiserId">
+                <display-name xml:lang="x-default">Advertiser Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="appId">
+                <display-name xml:lang="x-default">App Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="appSecret">
+                <display-name xml:lang="x-default">App Secret</display-name>
+                <type>password</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="gmcid">
+                <display-name xml:lang="x-default">Google Merchant Center Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="bcId">
+                <display-name xml:lang="x-default">Business Center Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="catalogId">
+                <display-name xml:lang="x-default">Catalog Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="catalogOverview">
+                <display-name xml:lang="x-default">Catalog Overview</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableAdvancedMatchingEmail">
+                <display-name xml:lang="x-default">Enable Advanced Matching Email</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableAdvancedMatchingPhone">
+                <display-name xml:lang="x-default">Enable Advanced Matching Phone</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalBusinessId">
+                <display-name xml:lang="x-default">External Business Id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalData">
+                <display-name xml:lang="x-default">ExternalData</display-name>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalDataKey">
+                <display-name xml:lang="x-default">External Data Key</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="pixelCode">
+                <display-name xml:lang="x-default">Pixel Code</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="pixelIdSentToEinstein">
+                <display-name xml:lang="x-default">Pixel Id Sent To Einstein</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="refreshToken">
+                <display-name xml:lang="x-default">Refresh Token</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="shopperClientId">
+                <display-name xml:lang="x-default">Shopper API Client ID</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="shopperClientSecret">
+                <display-name xml:lang="x-default">Shopper API Client Secret</display-name>
+                <type>password</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>         
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="custom">
+                <display-name xml:lang="x-default">Custom</display-name>
+                <attribute attribute-id="channel"/>
+                <attribute attribute-id="acceptTerms"/>
+                <attribute attribute-id="externalBusinessId"/>
+                <attribute attribute-id="appId"/>
+                <attribute attribute-id="appSecret"/>
+                <attribute attribute-id="pixelCode"/>
+                <attribute attribute-id="gmcid"/>
+                <attribute attribute-id="bcId"/>
+                <attribute attribute-id="catalogId"/>
+                <attribute attribute-id="advertiserId"/>
+                <attribute attribute-id="advertiserAccount"/>
+                <attribute attribute-id="catalogOverview"/>
+                <attribute attribute-id="externalData"/>
+                <attribute attribute-id="enableAdvancedMatchingPhone"/>
+                <attribute attribute-id="shopperClientSecret"/>
+                <attribute attribute-id="externalDataKey"/>
+                <attribute attribute-id="shopperClientId"/>
+                <attribute attribute-id="creationDate" system="true"/>
+                <attribute attribute-id="pixelIdSentToEinstein"/>
+                <attribute attribute-id="lastModified" system="true"/>
+                <attribute attribute-id="accessToken"/>
+                <attribute attribute-id="refreshToken"/>
+                <attribute attribute-id="enableAdvancedMatchingEmail"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+</metadata>

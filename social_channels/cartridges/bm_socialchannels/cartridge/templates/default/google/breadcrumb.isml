@@ -1,0 +1,5 @@
+<div id="bm-breadcrumb">
+    <a class="breadcrumb" href="${URLUtils.url('SiteNavigationBar-ShowMenuitemOverview', 'CurrentMenuItemId', 'social_channels_customadminmenuextension').toString()}">${Resource.msg('socialchannels.title', 'google', null)}</a>
+    &nbsp;&gt;&nbsp;
+    ${Resource.msg('google.title', 'google', null)}
+</div>

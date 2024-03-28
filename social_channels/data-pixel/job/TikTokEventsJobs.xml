@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jobs xmlns="http://www.demandware.com/xml/impex/jobs/2015-07-01">
+    <job job-id="TikTok-WebEvents-Push" priority="0">
+        <description>Sending the queued TikTok web events</description>
+        <parameters/>
+        <flow>
+            <context site-id="RefArch"/>
+            <step step-id="PushTikTokEvent" type="custom.TikTok.BatchEvent" enforce-restart="false">
+                <description/>
+                <parameters>
+                    <parameter name="batchSize">20</parameter>
+                    <parameter name="runs">50</parameter>
+                </parameters>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-once enabled="false">
+                <date>2022-09-29Z</date>
+                <time>13:52:27.000Z</time>
+            </run-once>
+        </triggers>
+    </job>
+    <job job-id="TikTok-AdvanceMatching" priority="0">
+        <description>check advance matching flag</description>
+        <parameters/>
+        <flow>
+            <context site-id="RefArch"/>
+            <step step-id="AdvanceMatching" type="custom.TikTok.AdvanceMatching" enforce-restart="false">
+                <description>check TikTok Advance matching flag</description>
+                <parameters/>
+            </step>
+        </flow>
+        <rules/>
+        <triggers>
+            <run-recurring enabled="false">
+                <recurrence>
+                    <date-from>2022-11-16Z</date-from>
+                    <start-time>06:00:00.000Z</start-time>
+                    <interval>1d</interval>
+                    <day-of-week>
+                        <weekday>Wednesday</weekday>
+                        <weekday>Friday</weekday>
+                        <weekday>Monday</weekday>
+                        <weekday>Saturday</weekday>
+                        <weekday>Thursday</weekday>
+                        <weekday>Sunday</weekday>
+                        <weekday>Tuesday</weekday>
+                    </day-of-week>
+                </recurrence>
+            </run-recurring>
+        </triggers>
+    </job>
+</jobs>

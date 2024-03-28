@@ -1,0 +1,82 @@
+<iscomment>
+    TikTok SDK. Do not edit
+</iscomment>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="https://sf16-scmcdn-va.ibytedtos.com/obj/static-us/ads/ecommerce-demo/static/css/universal.55717a51.chunk.css"></link>
+    <link rel="stylesheet" type="text/css" href="https://sf16-scmcdn-va.ibytedtos.com/obj/static-us/ads/ecommerce-demo/static/css/bytedance.a3ab9203.chunk.css"></link>
+    <link rel="stylesheet" type="text/css" href="https://sf16-scmcdn-va.ibytedtos.com/obj/static-us/ads/ecommerce-demo/static/css/vendors.44654ff3.chunk.css"></link>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title></title>
+</head>
+<body>
+    <!--script src="https://sf16-scmcdn-sg.ibytedtos.com/obj/static-sg/ads/ecommerce-demo/tbp_external_platform-v2.0.0.js"></!--script>
+    <script-- src="https://cdnjs.cloudflare.com/ajax/libs/js-sha256/0.9.0/sha256.min.js"></!script-->
+    <script src="https://sf16-scmcdn-va.ibytedtos.com/obj/static-us/ads/ecommerce-demo/tbp_external_platform-v2.2.1.js"></script>
+    <div id="root"></div>
+    <script type="application/javascript">
+        async function sleep(seconds) {
+            return new Promise(resolve => {
+                setTimeout(resolve, seconds * 1000);
+            })
+        }
+
+        async function checkConnectionStatus() {
+            return {
+                isConnected: ${pdict.isConnected},
+                externalData: {
+                    business_platform: "${require('int_tiktok/cartridge/scripts/TikTokConstants').BUSINESS_PLATFORM}",
+                    external_business_id: "${pdict.tikTokSettings.externalBusinessId}"
+                },
+            };
+        }
+
+        async function loadProfile() {
+            return {
+                bcId: "${pdict.tikTokSettings.bcId}",
+                bc: {
+                    id: "${pdict.tikTokSettings.bcId}",
+                    name: ""
+                },
+                advId: "${pdict.tikTokSettings.advertiserId}",
+                advertiser: {
+                    id: "${pdict.tikTokSettings.advertiserId}",
+                    name: "${require('dw/system/Site').getCurrent().getID()}"
+                },
+                pixelCode: "${pdict.tikTokSettings.pixelCode}",
+                pixel: {
+                    pixelCode: "${pdict.tikTokSettings.pixelCode}",
+                    pixelName: "",
+                    // advancedMatching is true if both fields below are true and vice versa,
+                    // partial true/false cases should be deemed as dirty data.
+                    advancedMatchingFields: {
+                        email: "${pdict.tikTokSettings.enableAdvancedMatchingEmail}",
+                        phoneNumber: "${pdict.tikTokSettings.enableAdvancedMatchingPhone}",
+                    },
+                },
+                catalogId: "${pdict.tikTokSettings.catalogId}",
+                businessPlatform: 'SALESFORCE'
+            };
+        }
+
+        async function loadCatalog() {
+            return {
+                approved: "${pdict.tikTokSettings.catalogOverview.approved}",
+                processing: "${pdict.tikTokSettings.catalogOverview.processing}",
+                rejected: "${pdict.tikTokSettings.catalogOverview.rejected}",
+            }
+        }
+
+        let external_data = "${pdict.base64}";
+        window.external_data = external_data
+        tbp.render({
+            baseName: "${request.httpURL}",
+            checkConnectionStatus,
+            loadProfile,
+            loadCatalog
+        });
+    </script>
+</body>
+</html>

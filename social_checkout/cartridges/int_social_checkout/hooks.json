@@ -1,0 +1,8 @@
+{
+    "hooks": [
+        {
+            "name": "dw.ocapi.shop.order.afterPATCH",
+            "script": "./cartridge/scripts/hooks/order/orderUpdate.js"
+        }
+    ]
+}

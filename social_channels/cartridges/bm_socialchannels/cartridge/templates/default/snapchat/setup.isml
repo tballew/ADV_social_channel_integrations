@@ -1,0 +1,117 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8" />
+    <isinclude template="inc/Modules" />
+    <isinclude template="common/head" />
+
+    <isinclude template="snapchat/breadcrumb" />
+
+    <div class="slds-grid slds-m-top_medium">
+        <div class="slds-col slds-size_1-of-1">
+            <div class="slds-row">
+                <isinclude template="snapchat/responses" />
+            </div>
+            <article class="slds-col slds-size_3-of-3 slds-card">
+                <div class="slds-card__header slds-grid">
+                    <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                        <div class="slds-media__body"></div>
+                        <div class="slds-no-flex slds-m-right_x-small">
+                            <a href="${URLUtils.url('BM_Snapchat-Disconnect')}" class="slds-button slds-button_destructive">
+                                <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                    <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#logout')}"></use>
+                                </svg>
+                                ${Resource.msg('snapchat.button.disconnect', 'snapchat', null)}
+                            </a>
+                        </div>
+                    </header>
+                </div>
+                <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-1 slds-large-size_1-of-2">
+                            <div class="slds-tile__detail">
+                                <div class="slds-form">
+                                    <div class="slds-form-element slds-form-element_readonly">
+                                        <span class="slds-form-element__label">${Resource.msg('snapchat.orgid.label', 'snapchat', null)}</span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${pdict.orgId} (${pdict.me.organization_id})</div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-form-element_readonly">
+                                        <span class="slds-form-element__label">${Resource.msg('snapchat.user&email.label', 'snapchat', null)}</span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${pdict.me.display_name} - ${pdict.me.email}</div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-form-element_readonly">
+                                        <span class="slds-form-element__label">${Resource.msg('snapchat.addaccount.label', 'snapchat', null)}</span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${pdict.advertiserAccount} (${pdict.advertiserId})</div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-form-element_readonly">
+                                        <span class="slds-form-element__label">${Resource.msg('snapchat.pixelid.label', 'snapchat', null)}</span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${pdict.pixelCode}</div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-m-top_small">
+                                        <a href="${URLUtils.url('BM_Snapchat-Manage')}" class="slds-button slds-button_neutral" target="_blank">
+                                            <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                                <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#settings')}"></use>
+                                            </svg>
+                                            ${Resource.msg('snapchat.button.manage', 'snapchat', null)}
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-3">
+                            <div class="slds-tile__detail">
+                                <h2 class="slds-m-vertical_medium slds-text-heading_small">${Resource.msg('einstein.details', 'snapchat', null)}</h2>
+                                <isif condition="${pdict.snapchatSettings.custom.pixelIdSentToEinstein === true}">
+                                    <p>
+                                        <span class="slds-badge slds-theme_success">
+                                            <span class="slds-badge__icon slds-badge__icon_left slds-badge__icon_inverse">
+                                                <span class="slds-icon_container slds-icon-utility-einstein slds-current-color">
+                                                <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
+                                                    <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#check')}"></use>
+                                                </svg>
+                                                </span>
+                                            </span>${Resource.msg('snapchat.shopperactivity.enabled', 'snapchat', null)}
+                                        </span>
+                                    </p>
+                                    <a href="${URLUtils.url('BM_Snapchat-DisableShopperActivities')}" class="slds-button slds-button_neutral slds-m-top_medium">
+                                        <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                            <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#einstein')}"></use>
+                                        </svg>
+                                        ${Resource.msg('snapchat.shopperactivity.disable', 'snapchat', null)}
+                                    </a>
+                                <iselse>
+                                    <p>
+                                        <span class="slds-badge slds-theme_error">
+                                            <span class="slds-badge__icon slds-badge__icon_left slds-badge__icon_inverse">
+                                                <span class="slds-icon_container slds-icon-utility-einstein slds-current-color">
+                                                <svg class="slds-icon slds-icon_xx-small" aria-hidden="true">
+                                                    <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#close')}"></use>
+                                                </svg>
+                                                </span>
+                                            </span>${Resource.msg('snapchat.shopperactivity.disabled', 'snapchat', null)}
+                                        </span>
+                                    </p>
+                                    <a href="${URLUtils.url('BM_Snapchat-EnableShopperActivities')}" class="slds-button slds-button_neutral slds-m-top_medium">
+                                        <svg class="slds-button__icon slds-button__icon_left" aria-hidden="true">
+                                            <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#einstein')}"></use>
+                                        </svg>
+                                        ${Resource.msg('snapchat.shopperactivity.enable', 'snapchat', null)}
+                                    </a>
+                                </isif>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</isdecorate>

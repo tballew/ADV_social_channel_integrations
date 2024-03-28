@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <custom-type type-id="TikTokWebEvents">
+        <display-name xml:lang="x-default">Event Timestamp</display-name>
+        <description xml:lang="x-default">Queue TikTok web events</description>
+        <staging-mode>no-staging</staging-mode>
+        <storage-scope>site</storage-scope>
+        <retention-days>7</retention-days>
+        <key-definition attribute-id="EventTimestamp">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="event">
+                <display-name xml:lang="x-default">TikTok Event</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="event_id">
+                <display-name xml:lang="x-default">TikTok Event_id</display-name>
+                <description xml:lang="x-default">Any string or hashed ID that can identify a unique even</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="properties">
+                <display-name xml:lang="x-default">Event Properties</display-name>
+                <description xml:lang="x-default">Properties associated with the event</description>
+                <type>text</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="referrer">
+                <display-name xml:lang="x-default">Page referrer</display-name>
+                <description xml:lang="x-default">Page referrer</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="ttclid">
+                <display-name xml:lang="x-default">TikTok client ID</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="url">
+                <display-name xml:lang="x-default">Page Url</display-name>
+                <description xml:lang="x-default">Page url when event happened</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="user_agent">
+                <display-name xml:lang="x-default">User Agent</display-name>
+                <description xml:lang="x-default">Non hashed user agent from the user’s device</description>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="external_id">
+                <display-name xml:lang="x-default">User external_id</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="phone_number">
+                <display-name xml:lang="x-default">User Phone Number</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="email">
+                <display-name xml:lang="x-default">User email</display-name>
+                <type>string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>            
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="Webevent">
+                <display-name xml:lang="x-default">Web Event</display-name>
+                <attribute attribute-id="EventTimestamp"/>
+                <attribute attribute-id="event"/>
+                <attribute attribute-id="event_id"/>
+                <attribute attribute-id="ttclid"/>
+                <attribute attribute-id="referrer"/>
+                <attribute attribute-id="url"/>
+                <attribute attribute-id="user_agent"/>
+                <attribute attribute-id="properties"/>
+                <attribute attribute-id="phone_number"/>
+                <attribute attribute-id="email"/>
+                <attribute attribute-id="external_id"/>                    
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+</metadata>

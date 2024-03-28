@@ -1,0 +1,174 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8">
+    <isinclude template="inc/Modules" />
+    <isinclude template="common/head" />
+
+    <isinclude template="tiktok/breadcrumb" />
+
+    <isif condition="${!pdict.acceptTerms}">
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small" aria-labelledby="welcome-mat-label" aria-describedby="welcome-mat-content" aria-modal="true">
+            <div class="slds-modal__container">
+                <div class="slds-modal__content" id="welcome-mat-content">
+                    <div class="slds-welcome-mat slds-welcome-mat_splash">
+                        <div class="slds-welcome-mat__content slds-grid">
+                            <div class="slds-welcome-mat__info slds-size_1-of-1">
+                                <div class="slds-welcome-mat__info-content">
+                                    <h2 class="slds-welcome-mat__info-title" id="welcome-mat-label">${Resource.msg('tiktok.terms.heading', 'tiktok', null)}</h2>
+                                    <div class="slds-welcome-mat__info-description slds-text-longform">
+                                        <p><isprint value="${Resource.msg('tiktok.terms.message', 'tiktok', null)}" encoding="off" /></p>
+                                    </div>
+                                    <div class="slds-welcome-mat__info-actions">
+                                        <a href="${URLUtils.url('BM_TikTok-AcceptTerms')}" class="slds-button slds-button_brand">${Resource.msg('tiktok.button.accept', 'tiktok', null)}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    <iselse>
+        <div class="slds-grid slds-m-top_medium">
+            <div class="slds-col slds-size_3-of-4">
+                <div class="slds-row">
+                    <isinclude template="tiktok/responses" />
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_2-of-16"></div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <p class="slds-m-vertical_large">${Resource.msg('tiktok.form.introduction', 'tiktok', null)}</p>
+                        </div>
+                    </div>
+                </div>
+                <form method="POST" id="launch-form" action="${URLUtils.url('BM_TikTok-Start', 'showsdk', true, 'csrf_token', request.httpParameterMap.csrf_token.stringValue)}">
+                <article class="slds-col slds-size_1-of-1 slds-card">
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_10-of-12">
+                                        <div class="slds-form">
+                                            <div class="slds-text-heading_small">
+                                                <p>${Resource.msg('tiktok.form.b2c.title', 'tiktok', null)}</p>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="am-clientid">${Resource.msg('tiktok.form.amclientid.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="am-clientid" name="${session.forms.tiktok.amclientid.htmlName}" value="${session.forms.tiktok.amclientid.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="am-clientsecret">${Resource.msg('tiktok.form.amclientsecret.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="password" id="am-clientsecret" name="${session.forms.tiktok.amclientsecret.htmlName}" value="${session.forms.tiktok.amclientsecret.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <!--div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="shopper-clientid">${Resource.msg('tiktok.form.shopperclientid.label', 'tiktok', null)}</label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="shopper-clientid" name="${session.forms.tiktok.shopperclientid.htmlName}" value="${session.forms.tiktok.shopperclientid.value}" class="slds-input" />
+                                                </div>
+                                            </!--div>
+                                            <div-- class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="shopper-clientsecret">${Resource.msg('tiktok.form.shopperclientsecret.label', 'tiktok', null)}</label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="password" id="shopper-clientsecret" name="${session.forms.tiktok.shopperclientsecret.htmlName}" value="${session.forms.tiktok.shopperclientsecret.value}" class="slds-input" />
+                                                </div>
+                                            </div-->
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <!-- <label class="slds-form-element__label" for="tenantid">${Resource.msg('tiktok.form.tenantid.label', 'tiktok', null)}<span class="star">*</span></label> -->
+                                                <div class="slds-form-element__control">
+                                                    <input type="hidden" id="tenantid" name="${session.forms.tiktok.tenantid.htmlName}" value="${session.forms.tiktok.tenantid.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="orgid">${Resource.msg('tiktok.form.orgid.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="orgid" name="${session.forms.tiktok.orgid.htmlName}" value="${session.forms.tiktok.orgid.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_10-of-12">
+                                        <div class="slds-form">
+                                            <div class="slds-text-heading_small">
+                                                <p>${Resource.msg('tiktok.form.tiktok.title', 'tiktok', null)}</p>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="email">${Resource.msg('tiktok.form.email.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="email" name="${session.forms.tiktok.email.htmlName}" value="${session.forms.tiktok.email.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked"> 
+                                                 <div class="slds-grid slds-gutters">
+                                                    <div class="slds-col slds-size_1-of-2">                                                 
+                                                        <div class="slds-form-element slds-form-element_stacked">
+                                                            <label class="slds-form-element__label" for="countrycallingcode">${Resource.msg('tiktok.form.countrycallingcode.label', 'tiktok', null)}</label>
+                                                            <div class="slds-form-element__control">
+                                                                <select type="text" id="countrycallingcode" name="${session.forms.tiktok.countrycallingcode.htmlName}" class="slds-input" >
+                                                                    <isloop items=${session.forms.tiktok.countrycallingcode.options} var="iso">
+                                                                        <option id="${iso.optionId}" value="${iso.htmlValue}" ${iso.selected ? 'selected' : ''}>${iso.label}</option>
+                                                                    </isloop>
+                                                                </select>                                                
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <div class="slds-form-element slds-form-element_stacked"> 
+                                                            <label class="slds-form-element__label" for="phone">${Resource.msg('tiktok.form.phone.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                            <div class="slds-form-element__control">
+                                                                <input type="text" id="phone" name="${session.forms.tiktok.phone.htmlName}" value="${session.forms.tiktok.phone.value}" class="slds-input" required/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="countrycode">${Resource.msg('tiktok.form.countrycode.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <select type="text" id="countrycode" name="${session.forms.tiktok.countrycode.htmlName}" class="slds-input" >
+                                                        <isloop items=${session.forms.tiktok.countrycode.options} var="iso">
+                                                            <option id="${iso.optionId}" value="${iso.htmlValue}" ${iso.selected ? 'selected' : ''}>${iso.label}</option>
+                                                        </isloop>
+                                                    </select>                                                
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="website">${Resource.msg('tiktok.form.website.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="website" name="${session.forms.tiktok.website.htmlName}" value="${session.forms.tiktok.website.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="industryid">${Resource.msg('tiktok.form.industryid.label', 'tiktok', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <select type="text" id="industryid" name="${session.forms.tiktok.industryid.htmlName}" class="slds-input" >
+                                                        <isloop items=${session.forms.tiktok.industryid.options} var="ind">
+                                                            <option id="${ind.optionId}" value="${ind.htmlValue}" ${ind.selected ? 'selected' : ''}>${ind.label}</option>
+                                                        </isloop>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <div class="slds-button-group slds-align_absolute-center slds-m-vertical_large" role="group">
+                    <button type="submit" class="slds-button slds-button_brand">${Resource.msg('tiktok.button.launch', 'tiktok', null)}</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </isif>
+</isdecorate>

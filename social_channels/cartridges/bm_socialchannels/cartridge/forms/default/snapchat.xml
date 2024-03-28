@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19" secure="false">
+    <field formid="appid" type="string" mandatory="true" min-length="25" max-length="50" missing-error="error.missing.appid" range-error="error.message.appid.between25and50" />
+    <field formid="appsecret" type="string" mandatory="true" min-length="25" max-length="50" missing-error="error.missing.appsecret" range-error="error.message.appsecret.between25and50" />
+
+    <action formid="submit" valid-form="true" />
+    <action formid="accept" valid-form="false" />
+</form>

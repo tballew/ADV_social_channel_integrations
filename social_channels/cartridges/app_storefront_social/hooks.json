@@ -1,0 +1,12 @@
+{
+    "hooks": [
+        {
+            "name": "app.template.htmlHeadSnapchat",
+            "script": "~/../int_snapchat/cartridge/scripts/hooks/htmlHead.js"
+        },
+        {
+            "name": "app.template.htmlHeadTikTok",
+            "script": "~/../int_tiktok/cartridge/scripts/hooks/htmlHead.js"
+        }
+    ]
+}

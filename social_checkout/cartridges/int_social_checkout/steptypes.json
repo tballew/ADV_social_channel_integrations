@@ -1,0 +1,47 @@
+{
+    "step-types": {
+        "script-module-step": [
+            {
+                "@type-id": "custom.UpdateOrderStatus",
+                "@supports-site-context":"true",
+                "@supports-organization-context":"false",
+                "description":"Update order and shipping status",
+                "module": "social_checkout/cartridge/scripts/jobs/UpdateOrderStatus",
+                "function":"execute",
+                "transactional":"true",
+                "parameters":
+                {
+                  "parameter":
+                  [
+                    {
+                        "@name": "statusFileName",
+                        "@description": "Order stat import FileNsme",
+                        "@type": "string",
+                        "@required": true,
+                        "@trim": true
+                    },
+                    {
+                        "@name": "statusFileFolder",
+                        "@description": "Local folder where the file resides, relative to IMPEX/",
+                        "@type": "string",
+                        "@required": true,
+                        "@trim": true
+                    }
+                  ]
+                },
+                "status-codes": {
+                    "status": [
+                        {
+                            "@code": "ERROR",
+                            "description": "Used when an error occurred."
+                        },
+                        {
+                            "@code": "OK",
+                            "description": "Used when everything went well."
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,39 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8" />
+    <isinclude template="inc/Modules" />
+    <isinclude template="common/head" />
+
+    <isinclude template="google/breadcrumb" />
+
+    <div class="slds-grid slds-m-top_medium">
+        <div class="slds-col slds-size_1-of-1">
+            <div class="slds-row">
+                <isinclude template="google/responses" />
+            </div>
+            <article class="slds-col slds-size_2-of-2 slds-card">
+                <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-tile__detail">
+                                <h2 class="slds-m-vertical_medium slds-text-heading_large"><b>${Resource.msg('google.heading', 'google', null)}</b></h2>
+                                <h2 class="slds-m-bottom_medium slds-text-heading_medium"><b>${Resource.msg('google.heading.inprogress', 'google', null)}</b></h2>
+                                <div class="slds-form slds-m-top_large">
+
+                                    <div class="slds-text-body_medium slds-form slds-m-bottom_large">
+                                        <p><isprint value="${Resource.msg('google.body.inprogress', 'google', null)}" encoding="on" /></p>
+                                    </div>
+                                    
+                                    <div class="slds-form-element slds-m-top_small slds-m-bottom_xx-large">
+                                        <a href="${URLUtils.url('BM_Google-Disconnect')}">
+                                            <u>${Resource.msg('google.button.disconnect', 'google', null)}</u>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</isdecorate>

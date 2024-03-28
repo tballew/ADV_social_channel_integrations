@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <type-extension type-id="Order">
+        <system-attribute-definitions>
+            <attribute-definition attribute-id="UUID">
+                <min-length>0</min-length>
+                <field-length>28</field-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="affiliatePartnerID">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="affiliatePartnerName">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="businessType">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">B2C</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">B2B</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="cancelCode">
+                <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">None Specified</display>
+                        <value>NONE_SPECIFIED</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Wrong Size</display>
+                        <value>WRONG_SIZE</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Wrong Color</display>
+                        <value>WRONG_COLOR</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="cancelDescription">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="channelType">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">Storefront</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Call Center</display>
+                        <value>2</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Marketplace</display>
+                        <value>3</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">DSS</display>
+                        <value>4</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Store</display>
+                        <value>5</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Pinterest</display>
+                        <value>6</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Twitter</display>
+                        <value>7</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Facebook Ads</display>
+                        <value>8</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Subscriptions</display>
+                        <value>9</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Online Reservation</display>
+                        <value>10</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Customer Service Center</display>
+                        <value>11</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Instagram Commerce</display>
+                        <value>12</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="confirmationStatus">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">NOTCONFIRMED</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">CONFIRMED</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="createdBy">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="creationDate"/>
+            <attribute-definition attribute-id="currencyCode">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="customerEmail">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="customerLocaleID">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="customerName">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="customerNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="customerOrderReference">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="exportAfter"/>
+            <attribute-definition attribute-id="exportStatus">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">NOTEXPORTED</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">EXPORTED</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">EXPORTREADY</display>
+                        <value>2</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">EXPORTFAILED</display>
+                        <value>3</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalOrderNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalOrderStatus">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="externalOrderText">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="lastModified"/>
+            <attribute-definition attribute-id="orderNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="originalOrderNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="paymentStatus">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">NOTPAID</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">PARTPAID</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">PAID</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="replaceCode">
+                <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">None Specified</display>
+                        <value>NONE_SPECIFIED</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Wrong Size</display>
+                        <value>WRONG_SIZE</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Wrong Color</display>
+                        <value>WRONG_COLOR</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="replaceDescription">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="replacedOrderNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="replacementOrderNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="shippingStatus">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">NOTSHIPPED</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">PARTSHIPPED</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">SHIPPED</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+            <attribute-definition attribute-id="status">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">CREATED</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">NEW</display>
+                        <value>3</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">OPEN</display>
+                        <value>4</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">COMPLETED</display>
+                        <value>5</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">CANCELLED</display>
+                        <value>6</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">REPLACED</display>
+                        <value>7</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">FAILED</display>
+                        <value>8</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+        </system-attribute-definitions>
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="shipmentsInfo">
+                <display-name xml:lang="x-default">Shipments Info</display-name>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+        </custom-attribute-definitions>
+    </type-extension>
+
+
+    <type-extension type-id="Shipment">
+        <system-attribute-definitions>
+            <attribute-definition attribute-id="UUID">
+                <min-length>0</min-length>
+                <field-length>28</field-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="creationDate"/>
+            <attribute-definition attribute-id="gift"/>
+            <attribute-definition attribute-id="giftMessage">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="lastModified"/>
+            <attribute-definition attribute-id="shipmentNo">
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="shippingStatus">
+                <value-definitions immutable="true">
+                    <value-definition>
+                        <display xml:lang="x-default">NOTSHIPPED</display>
+                        <value>0</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">SHIPPED</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>
+        </system-attribute-definitions>
+        <custom-attribute-definitions>
+            <attribute-definition attribute-id="fromStoreId">
+                <display-name xml:lang="x-default">Pickup Store ID</display-name>
+                <description xml:lang="x-default">Used to map the shipment to a  brick and mortar store.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <field-length>0</field-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="shipmentType">
+                <display-name xml:lang="x-default">When this attribute equals 'instore', the checkout flow will assign the shipping method (005) which has a no shipping charge.</display-name>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="storePickupMessage">
+                <display-name xml:lang="x-default">Store Pickup Message</display-name>
+                <description xml:lang="x-default">This is text used by the end user when sending a message to the brick and mortar store about the shipment.  This is reflected in the order export.</description>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+                <field-length>0</field-length>
+            </attribute-definition>
+            <attribute-definition attribute-id="trackingUrl">
+                <display-name xml:lang="x-default">Tracking URL</display-name>
+                <type>string</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <min-length>0</min-length>
+            </attribute-definition>
+        </custom-attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="storepickup">
+                <display-name xml:lang="x-default">Store Pickup Information</display-name>
+                <attribute attribute-id="fromStoreId"/>
+                <attribute attribute-id="storePickupMessage"/>
+            </attribute-group>
+        </group-definitions>
+    </type-extension>
+</metadata>

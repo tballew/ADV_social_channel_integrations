@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata xmlns="http://www.demandware.com/xml/impex/metadata/2006-10-31">
+    <custom-type type-id="SocialChannels">
+        <staging-mode>source-to-target</staging-mode>
+        <storage-scope>site</storage-scope>
+        <key-definition attribute-id="channel">
+            <type>string</type>
+            <min-length>0</min-length>
+        </key-definition>
+        <attribute-definitions>
+            <attribute-definition attribute-id="enableAddToCartEvent">
+                <display-name xml:lang="x-default">Enable Add to Cart event</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableCompletePaymentEvent">
+                <display-name xml:lang="x-default">Enable Complete Payment (Place Order) event</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableInitiateCheckoutEvent">
+                <display-name xml:lang="x-default">Enable Initiate Checkout event</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableProductShowEvent">
+                <display-name xml:lang="x-default">Enable View Content (Product Show) event</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="enableTracking">
+                <display-name xml:lang="x-default">Events API based tracking</display-name>
+                <type>boolean</type>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+            </attribute-definition>
+            <attribute-definition attribute-id="viewContentEventTracking">
+                <display-name xml:lang="x-default">View Content event tracking</display-name>
+                <type>enum-of-string</type>
+                <localizable-flag>false</localizable-flag>
+                <mandatory-flag>false</mandatory-flag>
+                <externally-managed-flag>false</externally-managed-flag>
+                <value-definitions>
+                    <value-definition default="true">
+                        <display xml:lang="x-default">Real Time</display>
+                        <value>1</value>
+                    </value-definition>
+                    <value-definition>
+                        <display xml:lang="x-default">Queue Events</display>
+                        <value>2</value>
+                    </value-definition>
+                </value-definitions>
+            </attribute-definition>            
+        </attribute-definitions>
+        <group-definitions>
+            <attribute-group group-id="tracking">
+                <display-name xml:lang="x-default">Tracking</display-name>
+                <attribute attribute-id="enableTracking"/>
+                <attribute attribute-id="enableProductShowEvent"/>
+                <attribute attribute-id="enableAddToCartEvent"/>
+                <attribute attribute-id="enableInitiateCheckoutEvent"/>
+                <attribute attribute-id="enableCompletePaymentEvent"/>
+                <attribute attribute-id="viewContentEventTracking"/>
+            </attribute-group>
+        </group-definitions>
+    </custom-type>
+</metadata>

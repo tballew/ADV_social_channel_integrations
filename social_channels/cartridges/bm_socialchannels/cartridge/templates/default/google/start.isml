@@ -1,0 +1,144 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8">
+    <isinclude template="inc/Modules" />
+    <isinclude template="common/head" />
+
+    <isinclude template="google/breadcrumb" />
+    <isif condition="${!pdict.acceptTerms}">
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_small" aria-labelledby="welcome-mat-label" aria-describedby="welcome-mat-content" aria-modal="true">
+            <div class="slds-modal__container">
+                <div class="slds-modal__content" id="welcome-mat-content">
+                    <div class="slds-welcome-mat slds-welcome-mat_splash">
+                        <div class="slds-welcome-mat__content slds-grid">
+                            <div class="slds-welcome-mat__info slds-size_1-of-1">
+                                <div class="slds-welcome-mat__info-content">
+                                    <h2 class="slds-welcome-mat__info-title" id="welcome-mat-label">${Resource.msg('google.terms.heading', 'google', null)}</h2>
+                                    <div class="slds-welcome-mat__info-description slds-text-longform">
+                                        <p><isprint value="${Resource.msg('google.terms.message', 'google', null)}" encoding="off" /></p>
+                                    </div>
+                                    <div class="slds-welcome-mat__info-actions">
+                                        <a href="${URLUtils.url('BM_Google-AcceptTerms')}" class="slds-button slds-button_brand">${Resource.msg('google.button.accept', 'google', null)}</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    <iselse>
+        <div class="slds-grid slds-m-top_medium">
+            <div class="slds-col slds-size_3-of-4">
+                <div class="slds-row">
+                    <isinclude template="google/responses" />
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_2-of-16"></div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <p class="slds-m-vertical_large">${Resource.msg('google.form.introduction', 'google', null)}</p>
+                        </div>
+                    </div>
+                </div>
+                <form method="POST" id="launch-form" action="${URLUtils.url('BM_Google-Start', 'launch', true, 'csrf_token', request.httpParameterMap.csrf_token.stringValue)}">
+                <article class="slds-col slds-size_1-of-1 slds-card">
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_10-of-12">
+                                        <div class="slds-form">
+                                            <div class="slds-text-heading_small slds-m-bottom_small">
+                                                <p>${Resource.msg('google.form.contact.title', 'google', null)}</p>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="retailer-name">${Resource.msg('google.form.name.label', 'google', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="retailer-name" name="${session.forms.google.name.htmlName}" value="${session.forms.google.name.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="email">${Resource.msg('google.form.email.label', 'google', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="email" id="email" name="${session.forms.google.email.htmlName}" value="${session.forms.google.email.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked"> 
+                                                <div class="slds-grid slds-gutters">
+                                                    <div class="slds-col slds-size_1-of-2">                                                 
+                                                        <div class="slds-form-element slds-form-element_stacked">
+                                                            <label class="slds-form-element__label" for="countrycallingcode">${Resource.msg('google.form.countrycallingcode.label', 'google', null)}</label>
+                                                            <div class="slds-form-element__control">
+                                                                <select type="text" id="countrycallingcode" name="${session.forms.google.countrycallingcode.htmlName}" class="slds-input" >
+                                                                    <isloop items=${session.forms.google.countrycallingcode.options} var="iso">
+                                                                        <option id="${iso.optionId}" value="${iso.htmlValue}" ${iso.selected ? 'selected' : ''}>${iso.label}</option>
+                                                                    </isloop>
+                                                                </select>                                                
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="slds-col slds-size_1-of-2">
+                                                        <div class="slds-form-element slds-form-element_stacked"> 
+                                                            <label class="slds-form-element__label" for="phone">${Resource.msg('google.form.phone.label', 'google', null)}<span class="star">*</span></label>
+                                                            <div class="slds-form-element__control">
+                                                                <input type="text" id="phone" name="${session.forms.google.phone.htmlName}" value="${session.forms.google.phone.value}" class="slds-input" required/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                                <div class="slds-grid slds-gutters">
+                                    <div class="slds-col slds-size_10-of-12">
+                                        <div class="slds-form">
+                                            <div class="slds-text-heading_small slds-m-bottom_small">
+                                                <p>${Resource.msg('google.form.b2c.title', 'google', null)}</p>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="username">${Resource.msg('google.form.webdavusername.label', 'google', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="webdavusername" name="${session.forms.google.webdavusername.htmlName}" value="${session.forms.google.webdavusername.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="accesskey">${Resource.msg('google.form.webdavaccesskey.label', 'google', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="password" id="webdavaccesskey" name="${session.forms.google.webdavaccesskey.htmlName}" value="${session.forms.google.webdavaccesskey.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="orgid">${Resource.msg('google.form.orgid.label', 'google', null)}<span class="star">*</span></label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="orgid" name="${session.forms.google.orgid.htmlName}" value="${session.forms.google.orgid.value}" class="slds-input" required/>
+                                                </div>
+                                            </div>
+                                            <div class="slds-text-heading_small slds-m-top_small slds-m-bottom_small">
+                                                <p>${Resource.msg('google.form.google.title', 'google', null)}</p>
+                                            </div>
+                                            <div class="slds-form-element slds-form-element_stacked">
+                                                <label class="slds-form-element__label" for="gmcid">${Resource.msg('google.form.gmcid.label', 'google', null)}</label>
+                                                <div class="slds-form-element__control">
+                                                    <input type="text" id="gmcid" name="${session.forms.google.gmcid.htmlName}" value="${session.forms.google.gmcid.value}" class="slds-input"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                <div class="slds-button-group slds-align_absolute-center slds-m-vertical_large" role="group">
+                    <button type="submit" class="slds-button slds-button_brand">${Resource.msg('google.button.launch', 'google', null)}</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </isif>
+</isdecorate>

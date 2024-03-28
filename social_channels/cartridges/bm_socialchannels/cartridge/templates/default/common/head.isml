@@ -1,0 +1,34 @@
+<link rel="stylesheet" href="${URLUtils.staticURL('css/salesforce-lightning-design-system.min.css')}" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<style type="text/css">
+    ${'#'}bm_content_column {
+        background-color: white;
+        padding: 0;
+    }
+
+    ${'#'}bm-breadcrumb {
+        margin: 0;
+        padding-bottom: 0;
+        height: auto;
+    }
+
+    .slds-card__footer .slds-form-element__row {
+        text-align: left;
+    }
+
+    a.slds-button_brand:link,
+    a.slds-button_brand:visited,
+    a.slds-button_destructive:link,
+    a.slds-button_destructive:visited {
+        color: white;
+    }
+
+    input[type=text],
+    input[type=textarea],
+    input[type=password],
+    select {
+        font-size: inherit;
+        border: 1px solid #dddbda;
+    }
+</style>

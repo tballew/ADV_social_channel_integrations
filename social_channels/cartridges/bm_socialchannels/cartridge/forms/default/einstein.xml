@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19" secure="false">
+    <field formid="advancedMetrics" type="string" />
+    <field formid="sendShopperActivities" type="boolean" />
+    <action formid="submit" valid-form="true" />
+</form>

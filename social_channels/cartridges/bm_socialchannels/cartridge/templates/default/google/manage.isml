@@ -1,0 +1,58 @@
+<isdecorate template="application/MenuFrame">
+    <iscontent type="text/html" charset="UTF-8" />
+    <isinclude template="inc/Modules" />
+    <isinclude template="common/head" />
+
+    <isinclude template="google/breadcrumb" />
+
+    <div class="slds-grid slds-m-top_medium">
+        <div class="slds-col slds-size_1-of-1">
+            <div class="slds-row">
+                <isinclude template="google/responses" />
+            </div>
+            <article class="slds-col slds-size_2-of-2 slds-card">
+                <div class="slds-card__body slds-card__body_inner slds-m-top_large">
+                    <div class="slds-grid slds-gutters">
+                        <div class="slds-col slds-size_1-of-2">
+                            <div class="slds-tile__detail">
+                                <h2 class="slds-m-vertical_medium slds-text-heading_large"><b>${Resource.msg('google.heading', 'google', null)}</b></h2>
+                                <h2 class="slds-m-bottom_medium slds-text-heading_small"><b>${Resource.msg('google.details', 'google', null)}</b></h2>
+                                <div class="slds-form slds-m-top_large">
+                                    <div class="slds-form-element slds-form-element_readonly slds-m-bottom_large">
+                                        <span class="slds-form-element__label"><b>${Resource.msg('google.email.label', 'google', null)}</b></span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${JSON.parse(pdict.googleSettings.custom.externalData).email}</div>
+                                        </div>
+                                    </div>
+                                    <div class="slds-form-element slds-form-element_readonly slds-m-bottom_large">
+                                        <span class="slds-form-element__label"><b>${Resource.msg('google.gmcid.label', 'google', null)}</b></span>
+                                        <div class="slds-form-element__control">
+                                            <div class="slds-form-element__static">${pdict.googleSettings.custom.gmcid}</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="slds-grid slds-m-bottom_xx-large">
+                                        <div class="slds-m-right_large">
+                                            <div class="slds-form-element slds-m-top_small">
+                                                <a href="${JSON.parse(pdict.googleSettings.custom.externalData).url}" class="slds-button slds-button_brand" target="_blank">
+                                                    ${Resource.msg('google.button.manage', 'google', null)}
+                                                </a>
+                                            </div>
+                                        </div>
+                                        <div class="slds-col slds-align-bottom">
+                                            <div class="slds-form-element slds-m-top_small">
+                                                <a href="${URLUtils.url('BM_Google-Disconnect')}">
+                                                    <u>${Resource.msg('google.button.disconnect', 'google', null)}</u>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</isdecorate>

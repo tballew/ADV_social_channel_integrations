@@ -1,0 +1,86 @@
+{
+  "step-types": {
+      "script-module-step": [
+        {
+          "@type-id": "custom.TikTok.BatchEvent",
+          "timeout-in-seconds": "60",
+          "description": "This job is used to send events to to TikTok.",
+          "module": "int_tiktok_pixel/cartridge/scripts/jobs/TikTokEvent",
+          "transactional": "true",
+          "function": "batchTikTokEvents",
+          "parameters": {
+            "parameters": [
+                {
+                    "@name": "batchSize",
+                    "@description": "Batch Size",
+                    "@type": "long",
+                    "@required": "true",
+                    "default-value":20,
+                    "enum-values":
+                    {
+                      "value":
+                      [
+                        10,
+                        20,
+                        30,
+                        40,
+                        50
+                      ]
+                    }                    
+                },
+                {
+                  "@name": "runs",
+                  "@description": "Number of runs",
+                  "@type": "long",
+                  "@required": "true",
+                  "default-value":50,
+                  "enum-values":
+                  {
+                    "value":
+                    [
+                      25,
+                      50,
+                      100,
+                      200,
+                      500
+                    ]
+                  }  
+              }
+            ]
+          },
+          "status-codes": {
+            "status": [
+                {
+                    "@code": "ERROR",
+                    "description": "Used when an error occurred."
+                },
+                {
+                    "@code": "OK",
+                    "description": "Used when everything went well."
+                }
+            ]
+          }
+        },
+        {
+          "@type-id": "custom.TikTok.AdvanceMatching",
+          "timeout-in-seconds": "30",
+          "description": "This job is used to check advance matching settings on TikTok.",
+          "module": "int_tiktok_pixel/cartridge/scripts/jobs/advanceMatching.js",
+          "transactional": "false",
+          "function": "checkAM",
+          "status-codes": {
+            "status": [
+                {
+                    "@code": "ERROR",
+                    "description": "Used when an error occurred."
+                },
+                {
+                    "@code": "OK",
+                    "description": "Used when everything went well."
+                }
+            ]
+          }
+        }          
+      ]
+  }
+}

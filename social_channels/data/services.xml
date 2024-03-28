@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns="http://www.demandware.com/xml/impex/services/2014-09-26">
+    <service service-id="google.merchant.create">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>google</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>google-rest-profile</profile-id>
+        <credential-id>google-surfaces-api</credential-id>
+    </service>
+
+    <service service-id="google.merchant.get">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>google</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>google-rest-profile</profile-id>
+        <credential-id>google-surfaces-api</credential-id>
+    </service>
+
+    <service-credential service-credential-id="b2c-account-manager">
+        <url>https://account-pod5.demandware.net/dwsso/oauth2/access_token</url>
+        <user-id>7f13a748-e19b-47a5-8bf8-5648810f7b4a</user-id>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="einstein-rest">
+        <url>https://ai.salesforce.com/v3/deployment</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="einstein-rest-staging">
+        <url>https://staging.ai.salesforce.com</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="snapchat-marketing-api-accounts">
+        <url>https://accounts.snapchat.com</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="snapchat-marketing-api-ads">
+        <url>https://adsapi.snapchat.com</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="snapchat-oauth-app">
+        <url>https://accounts.snapchat.com/login/oauth2/authorize</url>
+        <user-id>072aa223-fa40-4595-b109-500ac53c3f72</user-id>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="tiktok-ads">
+        <url>https://ads.tiktok.com</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-credential service-credential-id="tiktok-business-api">
+        <url>https://business-api.tiktok.com</url>
+        <user-id/>
+        <password masked="true">********</password>
+    </service-credential>
+
+    <service-profile service-profile-id="b2c-account-manager">
+        <timeout-millis>1000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>false</cb-enabled>
+        <cb-calls>0</cb-calls>
+        <cb-millis>0</cb-millis>
+    </service-profile>
+
+    <service-profile service-profile-id="einstein-rest-profile">
+        <timeout-millis>10000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>3</cb-calls>
+        <cb-millis>5000</cb-millis>
+    </service-profile>
+
+    <service-profile service-profile-id="snapchat-disconnect">
+        <timeout-millis>1000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>0</cb-calls>
+        <cb-millis>0</cb-millis>
+    </service-profile>
+
+    <service-profile service-profile-id="snapchat-rest">
+        <timeout-millis>20000</timeout-millis>
+        <rate-limit-enabled>true</rate-limit-enabled>
+        <rate-limit-calls>3</rate-limit-calls>
+        <rate-limit-millis>10000</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>3</cb-calls>
+        <cb-millis>10000</cb-millis>
+    </service-profile>
+
+    <service-profile service-profile-id="tiktok-catalog">
+        <timeout-millis>5000</timeout-millis>
+        <rate-limit-enabled>true</rate-limit-enabled>
+        <rate-limit-calls>3</rate-limit-calls>
+        <rate-limit-millis>10000</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>3</cb-calls>
+        <cb-millis>10000</cb-millis>
+    </service-profile>
+    
+    <service-profile service-profile-id="tiktok-disconnect">
+        <timeout-millis>1000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>false</cb-enabled>
+        <cb-calls>0</cb-calls>
+        <cb-millis>0</cb-millis>
+    </service-profile>
+
+    <service-profile service-profile-id="tiktok-rest">
+        <timeout-millis>5000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>3</rate-limit-calls>
+        <rate-limit-millis>5000</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>3</cb-calls>
+        <cb-millis>1000</cb-millis>
+    </service-profile>
+
+    <service service-id="b2c-account-manager">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>account-manager</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>b2c-account-manager</profile-id>
+        <credential-id>b2c-account-manager</credential-id>
+    </service>
+
+    <service service-id="einstein-rest">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>einstein-rest</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>einstein-rest-profile</profile-id>
+        <credential-id>einstein-rest</credential-id>
+    </service>
+
+    <service service-id="einstein-rest-staging">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>einstein-rest</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>einstein-rest-profile</profile-id>
+        <credential-id>einstein-rest-staging</credential-id>
+    </service>
+
+    <service service-id="snapchat.oauth.app">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>Snapchat</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>snapchat-rest</profile-id>
+        <credential-id>snapchat-oauth-app</credential-id>
+    </service>
+
+    <service service-id="snapchat.rest.accounts">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>Snapchat</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>snapchat-rest</profile-id>
+        <credential-id>snapchat-marketing-api-accounts</credential-id>
+    </service>
+
+    <service service-id="snapchat.rest.ads">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>Snapchat</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>snapchat-rest</profile-id>
+        <credential-id>snapchat-marketing-api-ads</credential-id>
+    </service>
+
+    <service service-id="tiktok.catalog">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>TikTok</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>tiktok-catalog</profile-id>
+        <credential-id>tiktok-business-api</credential-id>
+    </service>
+
+    <service service-id="tiktok.rest">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>TikTok</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>tiktok-rest</profile-id>
+        <credential-id>tiktok-ads</credential-id>
+    </service>
+
+    <service-credential service-credential-id="google-surfaces-api">
+        <url>https://salesforceshopping.googleapis.com</url>
+        <user-id/>
+        <password encrypted="true" encryption-type="common.export">epT1bNuAMb23rRHSmCLFh8hqtuVxGMo+vbdec0Ha4Rs=</password>
+    </service-credential>
+
+    <service-profile service-profile-id="google-rest-profile">
+        <timeout-millis>3000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>5</cb-calls>
+        <cb-millis>3000</cb-millis>
+    </service-profile>
+
+</services>

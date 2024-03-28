@@ -1,0 +1,23 @@
+<isif condition="${pdict.error}">
+    <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+        <span class="slds-assistive-text">${Resource.msg('snapchat.error', 'snapchat', null)}</span>
+        <span class="slds-icon_container slds-icon-utility-error slds-m-right_x-small">
+            <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
+                <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#error')}"></use>
+            </svg>
+        </span>
+        <h2>${Resource.msg('snapchat.error.' + StringUtils.trim(pdict.error), 'snapchat', null)}</h2>
+    </div>
+</isif>
+
+<isif condition="${pdict.success}">
+    <div class="slds-notify slds-notify_alert" role="alert">
+        <span class="slds-assistive-text">${Resource.msg('snapchat.info', 'snapchat', null)}</span>
+        <span class="slds-icon_container slds-icon-utility-user slds-m-right_x-small">
+            <svg class="slds-icon slds-icon_x-small" aria-hidden="true">
+                <use xlink:href="${URLUtils.staticURL('icons/utility-sprite/svg/symbols.svg#user')}"></use>
+            </svg>
+        </span>
+        <h2>${Resource.msgf('snapchat.success.' + pdict.success, 'snapchat', null, require('dw/system/Site').getCurrent().getName())}</h2>
+    </div>
+</isif>

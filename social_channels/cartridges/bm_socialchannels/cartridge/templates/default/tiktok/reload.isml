@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="en">
+    <body></body>
+    <script nonce="${pdict.cspNonce}">
+        function process() {
+            window.opener.location.href = "${pdict.url}";
+            // Close this window after a few time, to let the time to the parent window to refresh
+            setTimeout(() => window.close(), 500);
+        }
+        process();
+    </script>
+</html>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services xmlns="http://www.demandware.com/xml/impex/services/2014-09-26">
+    <service-credential service-credential-id="tiktok-business-api">
+        <url>https://business-api.tiktok.com</url>
+        <user-id/>
+        <password encrypted="true" encryption-type="common.export">wg92gg3PjsXz5YuEia/G2rzdfZCrY1SHqTn9msf9oCE=</password>
+    </service-credential>
+
+    <service-profile service-profile-id="tiktok.tracking.profile">
+        <timeout-millis>2000</timeout-millis>
+        <rate-limit-enabled>false</rate-limit-enabled>
+        <rate-limit-calls>0</rate-limit-calls>
+        <rate-limit-millis>0</rate-limit-millis>
+        <cb-enabled>true</cb-enabled>
+        <cb-calls>3</cb-calls>
+        <cb-millis>2000</cb-millis>
+    </service-profile>
+
+    <service service-id="tiktok.tracking">
+        <service-type>HTTP</service-type>
+        <enabled>true</enabled>
+        <log-prefix>TikTok</log-prefix>
+        <comm-log-enabled>true</comm-log-enabled>
+        <force-prd-enabled>false</force-prd-enabled>
+        <mock-mode-enabled>false</mock-mode-enabled>
+        <profile-id>tiktok.tracking.profile</profile-id>
+        <credential-id>tiktok-business-api</credential-id>
+    </service>
+
+</services>

@@ -1,0 +1,90 @@
+<?xml version="1.0"?>
+<form xmlns="http://www.demandware.com/xml/form/2008-04-19" secure="false">
+    <field formid="amclientid" type="string" />
+    <field formid="amclientsecret" type="string" />
+    <field formid="shopperclientid" type="string" />
+    <field formid="shopperclientsecret" type="string" />
+    <field formid="tenantid" type="string" />
+    <field formid="orgid" type="string" />
+    <field formid="tiktokappid" type="string" />
+    <field formid="tiktokappsecret" type="string" />
+    <field formid="tiktokexternaldatakey" type="string" />
+    <field formid="email" type="string" />
+    <field formid="countrycallingcode" type="string" >
+        <options>
+            <option optionid="US" label="US +1" value="+1 "/>"
+            <option optionid="AE" label="AE +971" value="+971 "/>"
+            <option optionid="AU" label="AU +61" value="+61 "/>"
+            <option optionid="CA" label="CA +1" value="+1 "/>"
+            <option optionid="DE" label="DE +49" value="+49 "/>"
+            <option optionid="EG" label="EG +20" value="+20 "/>"
+            <option optionid="ES" label="ES +34" value="+34 "/>"
+            <option optionid="FR_" label="FR +33" value="+33 "/>"
+            <option optionid="GB" label="GB +44" value="+44 "/>"
+            <option optionid="ID" label="ID +62" value="+62 "/>"
+            <option optionid="IL" label="IL +972" value="+972 "/>"
+            <option optionid="IT" label="IT +39" value="+39 "/>"
+            <option optionid="JP" label="JP +81" value="+81 "/>"
+            <option optionid="KR" label="KR +82" value="+82 "/>"
+            <option optionid="MY" label="MY +60" value="+60 "/>"
+            <option optionid="RU" label="RU +7" value="+7 "/>"
+            <option optionid="SA" label="SA +27" value="+27 "/>"
+            <option optionid="SG" label="SG +65" value="+65 "/>"
+            <option optionid="TH" label="TH +66" value="+66 "/>"
+            <option optionid="TR" label="TR +90" value="+90 "/>"
+            <option optionid="TW" label="TW +866" value="+886 "/>"
+            <option optionid="VN" label="VN +84" value="+84 "/>"
+        </options>
+    </field>
+    <field formid="phone" type="string" />
+    <field formid="countrycode" type="string" >
+        <options>
+            <option optionid="US" label="US" value="US"/>"
+            <option optionid="AE" label="AE" value="AE"/>"
+            <option optionid="AU" label="AU" value="AU"/>"
+            <option optionid="CA" label="CA" value="CA"/>"
+            <option optionid="DE" label="DE" value="DE"/>"
+            <option optionid="EG" label="EG" value="EG"/>"
+            <option optionid="ES" label="ES" value="ES"/>"
+            <option optionid="FR" label="FR" value="FR"/>"
+            <option optionid="GB" label="GB" value="GB"/>"
+            <option optionid="ID" label="ID" value="ID"/>"
+            <option optionid="IL" label="IL" value="IL"/>"
+            <option optionid="IT" label="IT" value="IT"/>"
+            <option optionid="JP" label="JP" value="JP"/>"
+            <option optionid="KR" label="KR" value="KR"/>"
+            <option optionid="MY" label="MY" value="MY"/>"
+            <option optionid="RU" label="RU" value="RU"/>"
+            <option optionid="SA" label="SA" value="SA"/>"
+            <option optionid="SG" label="SG" value="SG"/>"
+            <option optionid="TH" label="TH" value="TH"/>"
+            <option optionid="TR" label="TR" value="TR"/>"
+            <option optionid="TW" label="TW" value="TW"/>"
+            <option optionid="VN" label="VN" value="VN"/>"
+        </options>
+    </field>
+    <field formid="website" type="string" />
+    <field formid="acceptterms" type="boolean" />
+    <field formid="industryid" type="string" >
+        <options>
+            <option optionid="290505" label="Medicine" value="290505"/>"
+            <option optionid="290506" label="Health and Personal Care" value="290506"/>"
+            <option optionid="290216" label="Pet Supplies" value="290216"/>"
+            <option optionid="290210" label="Cosmetics and Personal Care" value="290210"/>"
+            <option optionid="291408" label="Other" value="291408"/>"
+            <option optionid="290303" label="Alcoholic Beverages" value="290303"/>"
+            <option optionid="290301" label="Food and Snacks" value="290301"/>"
+            <option optionid="290306" label="Non-alcoholic Beverages" value="290306"/>"
+            <option optionid="290405" label="Watches" value="290405"/>"
+            <option optionid="290407" label="Jewelry" value="290407"/>"
+            <option optionid="290401" label="Clothing and Shoes" value="290401"/>"
+            <option optionid="290403" label="Glasses, Bags and Accessories" value="290403"/>"
+            <option optionid="290101" label="Electrical Appliances" value="290101"/>"
+            <option optionid="290108" label="Computers, Communications and Consumer" value="290108"/>"
+            <option optionid="290904" label="Furniture" value="290904"/>"
+        </options>
+    </field>
+
+    <action formid="submit" valid-form="true" />
+    <action formid="accept" valid-form="false" />
+</form>
